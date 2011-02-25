@@ -1,0 +1,77 @@
+if SERVER then
+	include( "sn3_base_sv.lua" )
+else
+	include( "sn3_base_cl.lua" )
+end
+
+include( "sn3_base_netmessages.lua" )
+
+-- Initialization
+
+HookNetChannel(
+	{ name = "CNetChan::SendDatagram" }
+)
+
+hook.Add( "PreSendDatagram", "OutFilter", function( netchan, ... )
+	local buffers = { ... }
+
+	for k, write in pairs( buffers ) do
+		local totalbits = write:GetNumBitsWritten()
+		local read = sn3_bf_read( write:GetBasePointer(), totalbits )
+
+		write:Seek( 0 )
+		
+		while ( read:GetNumBitsLeft() >= 6 ) do
+			local msg = read:ReadUBitLong( 6 )
+			local handler = NET_MESSAGES[ msg ]
+
+			if ( !handler ) then
+				if ( CLIENT ) then
+					handler = NET_MESSAGES.CLC[ msg ]
+				else
+					handler = NET_MESSAGES.SVC[ msg ]
+				end
+
+				if ( !handler ) then
+					Msg( "Unknown Outgoing Message: " .. msg .. "\n" )
+					
+					write:Seek( totalbits )
+
+					break
+				end
+			end
+
+			local func = handler.OutgoingCopy or handler.DefaultCopy
+			
+			if ( func( netchan, read, write ) == false ) then
+				Msg( "Failed to filter message " .. msg .. "\n" )
+
+				write:Seek( totalbits )
+
+				break
+			end
+		end
+		
+		read:FinishReading()
+	end
+end )
+
+function FilterOutgoingMessage( msg, func )
+	local handler = NET_MESSAGES[ msg ]
+	
+	if ( !handler ) then
+		if ( CLIENT ) then
+			handler = NET_MESSAGES.CLC[ msg ]
+		else
+			handler = NET_MESSAGES.SVC[ msg ]
+		end
+	end
+	
+	if ( !handler ) then return end
+
+	handler.OutgoingCopy = func
+end
+
+function UnFilterOutgoingMessage( msg )
+	FilterOutgoingMessage( msg, nil )
+end
