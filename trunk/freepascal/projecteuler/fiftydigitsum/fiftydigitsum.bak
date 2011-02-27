@@ -1,0 +1,48 @@
+program fiftydigitsum;
+
+uses math;
+
+var
+	i, j : word;
+	sum, mult : qword;
+
+	numfile : text;
+	tmparr : array[1..20] of char;
+	numarr : array[1..100] of qword;
+
+begin
+	assign(numfile, 'numbers.txt');
+	reset(numfile);
+	
+	for i := 1 to 100 do
+	begin
+		sum := 0;
+
+		for j := 1 to 10 do
+		begin
+			read(numfile, tmparr[j]);
+			
+			writeln(tmparr[j]);
+
+			if (j = 10) then
+				mult := 1
+			else
+				mult := trunc(power(10, 10-j));
+
+			sum := sum + ((ord(tmparr[j])-48) * mult);
+		end;
+		
+		writeln(sum);
+		readln();
+		
+		for j := 1 to 40 do
+			read(numfile, tmparr[1]); (*Skip remaining digits*)
+			
+		writeln('Skipped');
+		readln();
+	end;
+
+	close(numfile);
+	
+	readln();
+end.

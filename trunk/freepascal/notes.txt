@@ -1,0 +1,22 @@
+Memory allocation:
+
+	new(varToAllocate);
+	dispose(varToFree);
+
+Types:
+	pchar = char * (C string)
+
+	shortint = int8
+	smallint = int16
+	longint = int32
+	int64 = int64
+
+	byte = uint8
+	word = uint16
+	longword = uint32
+	qword = uint64
+
+	Extra:
+		integer = uint8 or uint16
+			http://www.freepascal.org/docs-html/ref/refsu5.html: The integer type maps to the smallint type in the default Free Pascal mode. It maps to a longint in either Delphi or ObjFPC mode.
+		cardinal = uint32
