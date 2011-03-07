@@ -25,7 +25,8 @@ IServer *sv = NULL;
 IVEngineServer *engine = NULL;
 
 // globals
-bool g_bLoaded = false;
+bool g_bHooked = false;
+bool g_bLegacyMode = false;
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -52,11 +53,6 @@ int VFUNC CBaseServer_GetNumClients_H( CBaseServer *server )
 //---------------------------------------------------------------------------------
 bool CServerPlugin::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory )
 {
-	if ( g_bLoaded )
-		return false;
-
-	g_bLoaded = true;
-
 	ConnectTier1Libraries( &interfaceFactory, 1 );
 
 	ConVar_Register();
@@ -78,6 +74,16 @@ bool CServerPlugin::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 		dlclose( hEngine );
 	}
 #endif
+	if ( !sv )
+	{
+		Msg( "Failed to retrieve CBaseServer pointer\n" );
+
+		return false;
+	}
+	
+	HOOKVFUNC( sv, CBASESERVER_GETNUMCLIENTS_OFFSET, CBaseServer_GetNumClients_T, CBaseServer_GetNumClients_H );
+
+	g_bHooked = true;
 
 	CreateInterfaceFn fnEngineFactory = Sys_GetFactory( ENGINE_LIB );
 
@@ -97,16 +103,9 @@ bool CServerPlugin::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 		return false;
 	}
 
-	if ( !sv )
-	{
-		Msg( "Failed to retrieve CBaseServer pointer\n" );
-
-		return false;
-	}
-
 	engine->ServerCommand( "sv_master_legacy_mode 1\n" );
-
-	HOOKVFUNC( sv, CBASESERVER_GETNUMCLIENTS_OFFSET, CBaseServer_GetNumClients_T, CBaseServer_GetNumClients_H );
+	
+	g_bLegacyMode = true;
 
 	return true;
 }
@@ -116,13 +115,10 @@ bool CServerPlugin::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 //---------------------------------------------------------------------------------
 void CServerPlugin::Unload( void )
 {
-	if ( !g_bLoaded )
-		return;
-
-	if ( sv )
+	if ( sv && g_bHooked )
 		UNHOOKVFUNC( sv, CBASESERVER_GETNUMCLIENTS_OFFSET, CBaseServer_GetNumClients_T );
 
-	if ( engine )
+	if ( engine && g_bLegacyMode )
 		engine->ServerCommand( "sv_master_legacy_mode 0\n" );
 
 	ConVar_Unregister();
