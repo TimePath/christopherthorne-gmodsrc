@@ -16,7 +16,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 			int wParamLo = LOWORD( wParam );
 			int wParamHi = HIWORD( wParam );
 
-			if ( wParamLo == HWND_SETID_ID && wParamLo == wParamLo )
+			if ( wParamLo == HWND_SETID_ID )
 			{
 				char szAppID[32];
 				GetDlgItemTextA( hWnd, HWND_APPID_ID, szAppID, sizeof( szAppID ) );
