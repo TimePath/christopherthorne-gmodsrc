@@ -1,4 +1,4 @@
-require("sourcenet3")
+require( "sourcenet3" )
 
 NET_CHANNELS = {}
 NET_HOOKS = NET_HOOKS || { attach = {}, detach = {} }
@@ -6,7 +6,6 @@ NET_HOOKS = NET_HOOKS || { attach = {}, detach = {} }
 function HookNetChannel( ... )
 	for k, v in pairs( { ... } ) do
 		local name = v.name:gsub( "::", "_" )
-
 		local exists = false
 		
 		for k, v in pairs( NET_HOOKS.attach ) do	
@@ -81,40 +80,12 @@ function HookNetChannel( ... )
 		end
 	end
 
-	hook.Add( "PlayerConnect", "CreateNetChannel", function( name, address )
-		if ( address == "none" ) then return end -- Bots don't have a net channel
-
-		local indices = {}
-
-		for k, v in pairs( player.GetAll() ) do
-			table.insert( indices, v:EntIndex() )
+	hook.Add( "PostNetChannelInit", "AttachHooks", function( netchan )
+		if ( #NET_CHANNELS == 0 ) then
+			AttachNetChannel( netchan )
 		end
-			
-		local index
 
-		if ( #indices > 0 ) then
-			for i = 1, 255 do
-				if ( !table.HasValue( indices, i ) ) then
-					index = i
-						
-					break
-				end
-			end
-		else
-			index = 1 -- If there are no bots or players then the index will be 1
-		end
-			
-		print( "Predicted index for " .. address .. " = " .. index )
-
-		local netchan = CNetChan( index )
-
-		if ( netchan ) then
-			if ( #NET_CHANNELS == 0 ) then
-				AttachNetChannel( netchan )
-			end
-
-			table.insert( NET_CHANNELS, netchan )
-		end
+		table.insert( NET_CHANNELS, netchan )	
 	end )
 
 	hook.Add( "PreNetChannelShutdown", "DetachHooks", function( netchan, reason )
@@ -137,3 +108,33 @@ function HookNetChannel( ... )
 		end
 	end )
 end
+
+hook.Add( "PlayerConnect", "CreateNetChannel", function( name, address )
+	if ( address == "none" ) then return end -- Bots don't have a net channel
+
+	local indices = {}
+
+	for k, v in pairs( player.GetAll() ) do
+		table.insert( indices, v:EntIndex() )
+	end
+			
+	local index
+
+	if ( #indices > 0 ) then
+		for i = 1, 255 do
+			if ( !table.HasValue( indices, i ) ) then
+				index = i
+						
+				break
+			end
+		end
+	else
+		index = 1 -- If there are no bots or players then the index will be 1
+	end
+
+	local netchan = CNetChan( index )
+	
+	if ( netchan ) then
+		hook.Call( "PostNetChannelInit", nil, netchan )			
+	end
+end )

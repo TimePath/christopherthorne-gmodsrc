@@ -448,9 +448,32 @@ GLBL_FUNCTION( Attach__CNetChan_ProcessMessages )
 
 	if ( !IS_ATTACHED( CNetChan_ProcessMessages ) )
 	{
-		net_showmsg = g_pCVar->FindVar( "net_showmsg" );;
-		net_blockmsg = g_pCVar->FindVar( "net_blockmsg" );;
-		net_showpeaks = g_pCVar->FindVar( "net_showpeaks" );;
+		net_showmsg = g_pCVar->FindVar( "net_showmsg" );
+
+		if ( !net_showmsg )
+		{
+			Msg( "[gm_sourcenet3] net_showmsg not found\n" );
+
+			return 0;
+		}
+
+		net_blockmsg = g_pCVar->FindVar( "net_blockmsg" );
+
+		if ( !net_blockmsg )
+		{
+			Msg( "[gm_sourcenet3] net_blockmsg not found\n" );
+
+			return 0;
+		}
+
+		net_showpeaks = g_pCVar->FindVar( "net_showpeaks" );
+
+		if ( !net_showpeaks )
+		{
+			Msg( "[gm_sourcenet3] net_showpeaks not found\n" );
+			
+			return 0;
+		}
 
 		DWORD jmppos = (DWORD)CNetChan_ProcessMessages_H - (DWORD)CNetChan_ProcessMessages_T - 5;
 

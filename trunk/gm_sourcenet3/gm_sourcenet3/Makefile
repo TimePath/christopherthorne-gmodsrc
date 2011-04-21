@@ -34,6 +34,8 @@ SOURCENET3_OBJS = \
 	$(OBJ_DIR)/sourcenet/gl_datafragments_t.o \
 	$(OBJ_DIR)/sourcenet/gl_filehandle_t.o \
 	$(OBJ_DIR)/sourcenet/gl_hooks.o \
+	$(OBJ_DIR)/sourcenet/gl_igameevent.o \
+	$(OBJ_DIR)/sourcenet/gl_igameeventmanager2.o \
 	$(OBJ_DIR)/sourcenet/gl_inetchannelhandler.o \
 	$(OBJ_DIR)/sourcenet/gl_inetworkstringtable.o \
 	$(OBJ_DIR)/sourcenet/gl_inetworkstringtablecontainer.o \

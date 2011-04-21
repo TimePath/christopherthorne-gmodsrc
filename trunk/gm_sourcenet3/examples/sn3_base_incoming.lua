@@ -13,10 +13,12 @@ HookNetChannel(
 )
 
 hook.Add( "PreProcessMessages", "InFilter", function( netchan, read, write )
+	hook.Call( "BASE_PreProcessMessages", nil, netchan, read, write )
+
 	local totalbits = read:GetNumBitsLeft() + read:GetNumBitsRead()
 
-	while ( read:GetNumBitsLeft() >= 6 ) do
-		local msg = read:ReadUBitLong( 6 )
+	while ( read:GetNumBitsLeft() >= NET_MESSAGE_BITS ) do
+		local msg = read:ReadUBitLong( NET_MESSAGE_BITS )
 		local handler = NET_MESSAGES[ msg ]
 
 		if ( !handler ) then
@@ -27,7 +29,7 @@ hook.Add( "PreProcessMessages", "InFilter", function( netchan, read, write )
 			end
 
 			if ( !handler ) then
-				Msg( "Unknown Incoming Message: " .. msg .. "\n" )
+				Msg( "Unknown incoming message: " .. msg .. "\n" )
 					
 				write:Seek( totalbits )
 

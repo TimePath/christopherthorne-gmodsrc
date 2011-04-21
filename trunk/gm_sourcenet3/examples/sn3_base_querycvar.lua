@@ -17,7 +17,7 @@ function meta:QueryConVarValue( cvarname )
 	
 	QUERYCVAR_COOKIE = QUERYCVAR_COOKIE + 1
 
-	buffer:WriteUBitLong( svc_GetCvarValue, 6 )
+	buffer:WriteUBitLong( svc_GetCvarValue, NET_MESSAGE_BITS )
 	buffer:WriteSBitLong( QUERYCVAR_COOKIE, 32 )
 	buffer:WriteString( cvarname )
 	
@@ -25,7 +25,7 @@ function meta:QueryConVarValue( cvarname )
 end
 
 FilterIncomingMessage( clc_RespondCvarValue, function( netchan, read, write )
-	write:WriteUBitLong( clc_RespondCvarValue, 6 )
+	write:WriteUBitLong( clc_RespondCvarValue, NET_MESSAGE_BITS )
 				
 	local cookie = read:ReadSBitLong( 32 ) -- 10h
 	write:WriteSBitLong( cookie, 32 )

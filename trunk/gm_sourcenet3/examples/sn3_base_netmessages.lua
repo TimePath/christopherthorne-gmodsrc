@@ -13,13 +13,13 @@ end
 NET_MESSAGES = {
 	[ net_NOP ] = { -- 0
 		DefaultCopy = function( netchan, read, write )
-			write:WriteUBitLong( net_NOP, 6 )
+			write:WriteUBitLong( net_NOP, NET_MESSAGE_BITS )
 		end
 	},
 	
 	[ net_Disconnect ] = { -- 1
 		DefaultCopy = function( netchan, read, write )
-			write:WriteUBitLong( net_Disconnect, 6 )
+			write:WriteUBitLong( net_Disconnect, NET_MESSAGE_BITS )
 			
 			local reason = read:ReadString()
 			write:WriteString( reason )
@@ -30,7 +30,7 @@ NET_MESSAGES = {
 	
 	[ net_File ] = { -- 2
 		DefaultCopy = function( netchan, read, write )
-			write:WriteUBitLong( net_File, 6 )
+			write:WriteUBitLong( net_File, NET_MESSAGE_BITS )
 			
 			local transferid = read:ReadUBitLong( 32 )
 			write:WriteUBitLong( transferid, 32 )
@@ -47,7 +47,7 @@ NET_MESSAGES = {
 
 	[ net_Tick ] = { -- 3
 		DefaultCopy = function( netchan, read, write )
-			write:WriteUBitLong( net_Tick, 6 )
+			write:WriteUBitLong( net_Tick, NET_MESSAGE_BITS )
 
 			local tick = read:ReadLong()
 			write:WriteLong( tick )
@@ -64,7 +64,7 @@ NET_MESSAGES = {
 	
 	[ net_StringCmd ] = { -- 4
 		DefaultCopy = function( netchan, read, write )
-			write:WriteUBitLong( net_StringCmd, 6 )
+			write:WriteUBitLong( net_StringCmd, NET_MESSAGE_BITS )
 
 			local cmd = read:ReadString()
 			write:WriteString( cmd )
@@ -75,7 +75,7 @@ NET_MESSAGES = {
 
 	[ net_SetConVar ] = { -- 5
 		DefaultCopy = function( netchan, read, write )
-			write:WriteUBitLong( net_SetConVar, 6 )
+			write:WriteUBitLong( net_SetConVar, NET_MESSAGE_BITS )
 
 			local count = read:ReadByte()
 			write:WriteByte( count )
@@ -94,7 +94,7 @@ NET_MESSAGES = {
 
 	[ net_SignonState ] = { -- 6
 		DefaultCopy = function( netchan, read, write )
-			write:WriteUBitLong( net_SignonState, 6 )
+			write:WriteUBitLong( net_SignonState, NET_MESSAGE_BITS )
 			
 			local state = read:ReadByte()
 			write:WriteByte( state )
@@ -109,7 +109,7 @@ NET_MESSAGES = {
 	CLC = {
 		[ clc_ClientInfo ] = { -- 8
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( clc_ClientInfo, 6 )
+				write:WriteUBitLong( clc_ClientInfo, NET_MESSAGE_BITS )
 							
 				local spawncount = read:ReadLong() -- 14h, server spawn count - reconnects client if incorrect
 				write:WriteLong( spawncount )
@@ -151,7 +151,7 @@ NET_MESSAGES = {
 		
 		[ clc_Move ] = { -- 9
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( clc_Move, 6 )
+				write:WriteUBitLong( clc_Move, NET_MESSAGE_BITS )
 
 				local new = read:ReadUBitLong( 4 )
 				write:WriteUBitLong( new, 4 )
@@ -172,7 +172,7 @@ NET_MESSAGES = {
 		
 		[ clc_VoiceData ] = { -- 10
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( clc_VoiceData, 6 )
+				write:WriteUBitLong( clc_VoiceData, NET_MESSAGE_BITS )
 				
 				local bits = read:ReadWord()
 				write:WriteWord( bits )
@@ -187,7 +187,7 @@ NET_MESSAGES = {
 		
 		[ clc_BaselineAck ] = { -- 11
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( clc_BaselineAck, 6 )
+				write:WriteUBitLong( clc_BaselineAck, NET_MESSAGE_BITS )
 				
 				local tick = read:ReadLong() -- 10h
 				write:WriteLong( tick )
@@ -201,7 +201,7 @@ NET_MESSAGES = {
 		
 		[ clc_ListenEvents ] = { -- 12
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( clc_ListenEvents, 6 )
+				write:WriteUBitLong( clc_ListenEvents, NET_MESSAGE_BITS )
 				
 				debugprint( "clc_ListenEvents" )
 
@@ -214,7 +214,7 @@ NET_MESSAGES = {
 		
 		[ clc_RespondCvarValue ] = { -- 13
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( clc_RespondCvarValue, 6 )
+				write:WriteUBitLong( clc_RespondCvarValue, NET_MESSAGE_BITS )
 				
 				local cookie = read:ReadSBitLong( 32 ) -- 10h
 				write:WriteSBitLong( cookie, 32 )
@@ -234,7 +234,7 @@ NET_MESSAGES = {
 		
 		[ clc_FileCRCCheck ] = { -- 14 (Untested)
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( clc_FileCRCCheck, 6 )
+				write:WriteUBitLong( clc_FileCRCCheck, NET_MESSAGE_BITS )
 				
 				local unk1 = read:ReadOneBit()
 				write:WriteOneBit( unk1 )
@@ -264,13 +264,14 @@ NET_MESSAGES = {
 		
 		[ clc_CmdKeyValues ] = { -- 16
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( clc_CmdKeyValues, 6 )
+				write:WriteUBitLong( clc_CmdKeyValues, NET_MESSAGE_BITS )
 
 				local length = read:ReadLong()
 				write:WriteLong( length )
-				
-				local keyvalues = read:ReadBits( length )
-				write:WriteBits( keyvalues, length )
+
+				local keyvalues = read:ReadBits( length * 8 )
+				write:WriteBits( keyvalues, length * 8 )
+				keyvalues:Delete()
 				
 				debugprint( "clc_CmdKeyValues", length )
 			end
@@ -278,8 +279,8 @@ NET_MESSAGES = {
 	
 		[ clc_FileMD5Check ] = { -- 17 (Untested, seems to just copy FileCRCCheck?)
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( clc_FileMD5Check, 6 )
-				
+				write:WriteUBitLong( clc_FileMD5Check, NET_MESSAGE_BITS )
+
 				local unk1 = read:ReadOneBit()
 				write:WriteOneBit( unk1 )
 				
@@ -310,7 +311,7 @@ NET_MESSAGES = {
 	SVC = {
 		[ svc_Print ] = { -- 7
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_Print, 6 )
+				write:WriteUBitLong( svc_Print, NET_MESSAGE_BITS )
 				
 				local str = read:ReadString()
 				write:WriteString( str )
@@ -321,7 +322,7 @@ NET_MESSAGES = {
 		
 		[ svc_ServerInfo ] = { -- 8
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_ServerInfo, 6 )
+				write:WriteUBitLong( svc_ServerInfo, NET_MESSAGE_BITS )
 
 				-- Protocol version number
 				local version = read:ReadShort()
@@ -392,7 +393,7 @@ NET_MESSAGES = {
 		
 		[ svc_SendTable ] = { -- 9 (Untested!)
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_SendTable, 6 )
+				write:WriteUBitLong( svc_SendTable, NET_MESSAGE_BITS )
 				
 				local encoded = read:ReadOneBit()
 				write:WriteOneBit( encoded )
@@ -407,10 +408,10 @@ NET_MESSAGES = {
 				debugprint( "svc_SendTable", ( encoded == 1 ), bits )
 			end
 		},
-		
+
 		[ svc_ClassInfo ] = { -- 10
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_ClassInfo, 6 )
+				write:WriteUBitLong( svc_ClassInfo, NET_MESSAGE_BITS )
 				
 				local numclasses = read:ReadShort()
 				write:WriteShort( numclasses )
@@ -439,7 +440,7 @@ NET_MESSAGES = {
 		
 		[ svc_SetPause ] = { -- 11
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_SetPause, 6 )
+				write:WriteUBitLong( svc_SetPause, NET_MESSAGE_BITS )
 				
 				local state = read:ReadOneBit()
 				write:WriteOneBit( state )
@@ -450,16 +451,16 @@ NET_MESSAGES = {
 		
 		[ svc_CreateStringTable ] = { -- 12
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_CreateStringTable, 6 )
+				write:WriteUBitLong( svc_CreateStringTable, NET_MESSAGE_BITS )
 				
 				local tablename = read:ReadString()
 				write:WriteString( tablename )
 
-				local unk2 = read:ReadWord()
-				write:WriteWord( unk2 )
+				local maxentries = read:ReadWord()
+				write:WriteWord( maxentries )
 
-				local entries = read:ReadUBitLong( math.log2( unk2 ) + 1 )
-				write:WriteUBitLong( entries, math.log2( unk2 ) + 1 )
+				local entries = read:ReadUBitLong( math.log2( maxentries ) + 1 )
+				write:WriteUBitLong( entries, math.log2( maxentries ) + 1 )
 
 				local bits = read:ReadUBitLong( 20 )
 				write:WriteUBitLong( bits, 20 )
@@ -475,8 +476,8 @@ NET_MESSAGES = {
 					write:WriteUBitLong( userdatabits, 4 )
 				end
 				
-				local unk8 = read:ReadOneBit()				
-				write:WriteOneBit( unk8 )	
+				local compressed = read:ReadOneBit()			
+				write:WriteOneBit( compressed )	
 				
 				local data = read:ReadBits( bits )
 				write:WriteBits( data, bits )
@@ -488,7 +489,7 @@ NET_MESSAGES = {
 
 		[ svc_UpdateStringTable ] = { -- 13
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_UpdateStringTable, 6 )
+				write:WriteUBitLong( svc_UpdateStringTable, NET_MESSAGE_BITS )
 
 				local tableid = read:ReadUBitLong( math.log2( MAX_TABLES ) ) -- 10h
 				write:WriteUBitLong( tableid, math.log2( MAX_TABLES ) )
@@ -518,7 +519,7 @@ NET_MESSAGES = {
 
 		[ svc_VoiceInit ] = { -- 14
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_VoiceInit, 6 )
+				write:WriteUBitLong( svc_VoiceInit, NET_MESSAGE_BITS )
 				
 				local codec = read:ReadString()
 				write:WriteString( codec )
@@ -532,7 +533,7 @@ NET_MESSAGES = {
 
 		[ svc_VoiceData ] = { -- 15
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_VoiceData, 6 )
+				write:WriteUBitLong( svc_VoiceData, NET_MESSAGE_BITS )
 
 				local client = read:ReadByte() -- 10h				
 				write:WriteByte( client )
@@ -553,7 +554,7 @@ NET_MESSAGES = {
 
 		[ svc_Sounds ] = { -- 17
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_Sounds, 6 )
+				write:WriteUBitLong( svc_Sounds, NET_MESSAGE_BITS )
 
 				local reliable = read:ReadOneBit()
 				write:WriteOneBit( reliable )
@@ -584,7 +585,7 @@ NET_MESSAGES = {
 		
 		[ svc_SetView ] = { -- 18
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_SetView, 6 )
+				write:WriteUBitLong( svc_SetView, NET_MESSAGE_BITS )
 				
 				local viewent = read:ReadUBitLong( 11 )
 				write:WriteUBitLong( viewent, 11 )
@@ -595,7 +596,7 @@ NET_MESSAGES = {
 
 		[ svc_FixAngle ] = { -- 19
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_FixAngle, 6 )
+				write:WriteUBitLong( svc_FixAngle, NET_MESSAGE_BITS )
 				
 				local relative = read:ReadOneBit()
 				write:WriteOneBit( relative )
@@ -615,7 +616,7 @@ NET_MESSAGES = {
 
 		[ svc_CrosshairAngle ] = { -- 20
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_CrosshairAngle, 6 )
+				write:WriteUBitLong( svc_CrosshairAngle, NET_MESSAGE_BITS )
 				
 				local p = read:ReadBitAngle( 16 )
 				write:WriteBitAngle( p, 16 )
@@ -632,7 +633,7 @@ NET_MESSAGES = {
 
 		[ svc_BSPDecal ] = { -- 21
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_BSPDecal, 6 )
+				write:WriteUBitLong( svc_BSPDecal, NET_MESSAGE_BITS )
 
 				local pos = read:ReadBitVec3Coord() -- 10h
 				write:WriteBitVec3Coord( pos )
@@ -666,7 +667,7 @@ NET_MESSAGES = {
 
 		[ svc_UserMessage ] = { -- 23
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_UserMessage, 6 )
+				write:WriteUBitLong( svc_UserMessage, NET_MESSAGE_BITS )
 				
 				local msgtype = read:ReadByte() -- 10h
 				write:WriteByte( msgtype )
@@ -684,7 +685,7 @@ NET_MESSAGES = {
 		
 		[ svc_EntityMessage ] = { -- 24
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_EntityMessage, 6 )
+				write:WriteUBitLong( svc_EntityMessage, NET_MESSAGE_BITS )
 				
 				local entity = read:ReadUBitLong( 11 )
 				write:WriteUBitLong( entity, 11 )
@@ -705,7 +706,7 @@ NET_MESSAGES = {
 
 		[ svc_GameEvent ] = { -- 25
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_GameEvent, 6 )
+				write:WriteUBitLong( svc_GameEvent, NET_MESSAGE_BITS )
 				
 				local bits = read:ReadUBitLong( 11 )
 				write:WriteUBitLong( bits, 11 )
@@ -720,7 +721,7 @@ NET_MESSAGES = {
 		
 		[ svc_PacketEntities ] = { -- 26
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_PacketEntities, 6 )
+				write:WriteUBitLong( svc_PacketEntities, NET_MESSAGE_BITS )
 				
 				local max = read:ReadUBitLong( 11 )
 				write:WriteUBitLong( max, 11 )
@@ -757,7 +758,7 @@ NET_MESSAGES = {
 		
 		[ svc_TempEntities ] = { -- 27
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_TempEntities, 6 )
+				write:WriteUBitLong( svc_TempEntities, NET_MESSAGE_BITS )
 				
 				local num = read:ReadUBitLong( 8 ) -- 10h
 				write:WriteUBitLong( num, 8 )
@@ -775,7 +776,7 @@ NET_MESSAGES = {
 		
 		[ svc_Prefetch ] = { -- 28
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_Prefetch, 6 )
+				write:WriteUBitLong( svc_Prefetch, NET_MESSAGE_BITS )
 				
 				local index = read:ReadUBitLong( 13 )
 				write:WriteUBitLong( index, 13 )
@@ -786,7 +787,7 @@ NET_MESSAGES = {
 		
 		[ svc_Menu ] = { -- 29
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_Menu, 6 )
+				write:WriteUBitLong( svc_Menu, NET_MESSAGE_BITS )
 				
 				local menutype = read:ReadShort()
 				write:WriteShort( menutype )
@@ -804,7 +805,7 @@ NET_MESSAGES = {
 		
 		[ svc_GameEventList ] = { -- 30
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_GameEventList, 6 )
+				write:WriteUBitLong( svc_GameEventList, NET_MESSAGE_BITS )
 
 				local num = read:ReadUBitLong( 9 )
 				write:WriteUBitLong( num, 9 )
@@ -822,7 +823,7 @@ NET_MESSAGES = {
 		
 		[ svc_GetCvarValue ] = { -- 31
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_GetCvarValue, 6 )
+				write:WriteUBitLong( svc_GetCvarValue, NET_MESSAGE_BITS )
 				
 				local cookie = read:ReadSBitLong( 32 )
 				write:WriteSBitLong( cookie, 32 )
@@ -836,13 +837,14 @@ NET_MESSAGES = {
 		
 		[ svc_CmdKeyValues ] = { -- 32
 			DefaultCopy = function( netchan, read, write )
-				write:WriteUBitLong( svc_CmdKeyValues, 6 )
+				write:WriteUBitLong( svc_CmdKeyValues, NET_MESSAGE_BITS )
 				
 				local length = read:ReadLong()
 				write:WriteLong( length )
 				
-				local keyvalues = read:ReadBits( length )
-				write:WriteBits( keyvalues, length )
+				local keyvalues = read:ReadBits( length * 8 )
+				write:WriteBits( keyvalues, length * 8 )
+				keyvalues:Delete()
 				
 				debugprint( "svc_CmdKeyValues", length )
 			end

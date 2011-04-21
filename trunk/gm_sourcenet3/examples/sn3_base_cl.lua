@@ -74,8 +74,6 @@ function HookNetChannel( ... )
 				AttachNetChannel( CNetChan() )
 
 				hook.Remove( "Think", "CreateNetChannel" )
-
-				print( "Created CNetChan" )
 			end
 		end )
 	end
@@ -91,8 +89,6 @@ function HookNetChannel( ... )
 					HookNetChannel( unpack( args ) )
 					
 					hook.Remove( "Think", "DestroyNetChannel" )
-					
-					print( "Destroyed CNetChan" )
 				end
 			end )
 		end

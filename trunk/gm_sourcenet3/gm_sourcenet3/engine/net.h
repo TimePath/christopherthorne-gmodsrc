@@ -18,6 +18,9 @@
 
 // NETWORKING INFO
 
+// Number of bits to use for message type
+#define NET_MESSAGE_BITS 6
+
 // This is the packet payload without any header bytes (which are attached for actual sending)
 #define	NET_MAX_PAYLOAD	80000
 
