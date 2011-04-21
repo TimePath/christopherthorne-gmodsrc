@@ -5,6 +5,6 @@ FilterOutgoingMessage( svc_Print, function( netchan, read, write )
 
 	print( string.format( "Sending message \"%s\" to %s", msg, netchan:GetAddress():ToString() ) )
 
-	write:WriteUBitLong( svc_Print, 6 )
+	write:WriteUBitLong( svc_Print, NET_MESSAGE_BITS )
 	write:WriteString( msg )
 end )

@@ -11,7 +11,7 @@ function _R.Player:SetConVar( name, value )
 	
 	local buf = netchan:GetReliableBuffer()
 	
-	buf:WriteUBitLong( net_SetConVar, 6 )
+	buf:WriteUBitLong( net_SetConVar, NET_MESSAGE_BITS )
 	buf:WriteByte( 1 )
 	buf:WriteString( name )
 	buf:WriteString( value )

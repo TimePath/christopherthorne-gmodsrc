@@ -103,7 +103,7 @@ META_FUNCTION( netadr_t, ToString )
 
 	netadr_t *adr = GET_META( 1, netadr_t );
 
-	Lua()->Push( adr->ToString() );
+	Lua()->Push( adr->ToString( Lua()->GetBool( 2 ) ) );
 
 	return 1;
 }

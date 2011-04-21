@@ -1,7 +1,7 @@
 include( "sn3_base_incoming.lua" )
 
 FilterIncomingMessage( svc_VoiceData, function( netchan, read, write )
-	write:WriteUBitLong( svc_VoiceData, 6 )
+	write:WriteUBitLong( svc_VoiceData, NET_MESSAGE_BITS )
 
 	local client = read:ReadByte()		
 	write:WriteByte( client )
@@ -18,7 +18,7 @@ FilterIncomingMessage( svc_VoiceData, function( netchan, read, write )
 	if ( client != LocalPlayer():EntIndex() - 1 ) then
 		local voicebuf = CNetChan():GetVoiceBuffer()
 		
-		voicebuf:WriteUBitLong( clc_VoiceData, 6 )
+		voicebuf:WriteUBitLong( clc_VoiceData, NET_MESSAGE_BITS )
 		voicebuf:WriteWord( bits )
 		voicebuf:WriteBits( voicedata, bits )
 

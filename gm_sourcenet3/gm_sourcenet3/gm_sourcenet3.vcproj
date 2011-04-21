@@ -115,7 +115,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./;common;sourcenet;engine;sdk/common;sdk/public;sdk/public/tier0;sdk/public/tier1;sdk/public/mathlib;sdk/public/engine;sdk/public;sdk/game_shared;sdk/dlls;sdk/game/client;sdk/game/server;sdk/game/shared;"
+				AdditionalIncludeDirectories="./;common;sourcenet;engine;../../sdk/common;../../sdk/public;../../sdk/public/tier0;../../sdk/public/tier1;../../sdk/public/mathlib;../../sdk/public/engine;../../sdk/public;../../sdk/game_shared;../../sdk/dlls;../../sdk/game/client;../../sdk/game/server;../../sdk/game/shared;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GM_SOURCENET3_EXPORTS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -136,7 +136,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="tier0.lib tier1.lib ws2_32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="sdk/lib/public"
+				AdditionalLibraryDirectories="../../sdk/lib/public"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"

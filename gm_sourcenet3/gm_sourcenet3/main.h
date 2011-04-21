@@ -36,7 +36,13 @@
 
 #include <utllinkedlist.h>
 
-typedef CUtlLinkedList<lua_State *> luaStateList_t;
+struct multiStateInfo
+{
+	lua_State *L;
+	int ref_hook_Call; // hook.Call
+};
+
+typedef CUtlLinkedList<multiStateInfo> luaStateList_t;
 
 luaStateList_t *GetLuaStates( void );
 
@@ -47,12 +53,10 @@ luaStateList_t *GetLuaStates( void );
 	{ \
 		for ( int i = 0; i < states->Count(); i++ ) \
 		{ \
-			lua_State *L = states->Element( i ); \
-			if ( !L ) { Msg( "Lua state %i = NULL\n", i ); continue; } \
+			multiStateInfo msi = states->Element( i ); \
+			lua_State *L = msi.L; \
 			UsesLua(); \
-			ILuaObject *_G_hook = Lua()->GetGlobal( "hook" ); \
-			ILuaObject *_G_hook_Call = _G_hook->GetMember( "Call" ); \
-			Lua()->Push( _G_hook_Call ); \
+			Lua()->PushReference( msi.ref_hook_Call ); \
 			Lua()->Push( name ); \
 			Lua()->PushNil(); \
 			int argc = 0
@@ -65,13 +69,9 @@ luaStateList_t *GetLuaStates( void );
 			Lua()->Call( 2 + argc, returns )
 
 #define STOP_MULTISTATE_HOOK() \
-			_G_hook_Call->UnReference(); \
-			_G_hook->UnReference(); \
 			break;
 
 #define END_MULTISTATE_HOOK() \
-			_G_hook_Call->UnReference(); \
-			_G_hook->UnReference(); \
 		} \
 	} \
 	else \
@@ -82,15 +82,15 @@ luaStateList_t *GetLuaStates( void );
 
 // ILuaInterface macros //
 
-#undef	Lua
+#undef Lua
 #define Lua()		pLuaInterface
-#define UsesLua()	ILuaInterface *pLuaInterface = modulemanager->GetLuaInterface( L ) // (May not make a difference, compiler could optimize automatically?)
+#define UsesLua()	ILuaInterface *pLuaInterface = modulemanager->GetLuaInterface( L )
 
 // Global macros //
 
 // Meta tables (META_)
 
-#define GET_META( index, name )					(name *)Lua()->GetUserData( index )
+#define GET_META( index, name )	(name *)Lua()->GetUserData( index )
 
 #define PUSH_META( data, name ) \
 	{ \
@@ -106,32 +106,27 @@ luaStateList_t *GetLuaStates( void );
 		} \
 	} \
 
-#define META_FUNCTION( meta, name )				LUA_FUNCTION( meta##__##name )
+#define META_FUNCTION( meta, name )		LUA_FUNCTION( meta##__##name )
 
-#define	META_ID( name, id )						const int META_##name##_id = SOURCENET_META_BASE + id; \
-												const char *META_##name##_name = #name
+#define	META_ID( name, id )			const int META_##name##_id = SOURCENET_META_BASE + id; \
+						const char *META_##name##_name = #name
 
-#define EXT_META_FUNCTION( meta, name)			extern META_FUNCTION( meta, name )
+#define EXT_META_FUNCTION( meta, name)		extern META_FUNCTION( meta, name )
 
-#define EXT_META_ID( name, id )					extern const int META_##name##_id; \
-												extern const char *META_##name##_name
+#define EXT_META_ID( name, id )			extern const int META_##name##_id; \
+						extern const char *META_##name##_name
 
-#define GET_META_ID( name )						META_##name##_id
-#define GET_META_NAME( name )					META_##name##_name
+#define GET_META_ID( name )			META_##name##_id
+#define GET_META_NAME( name )			META_##name##_name
 
 #define BEGIN_META_REGISTRATION( name ) \
 	{ \
 		ILuaObject *META__tbl = Lua()->GetMetaTable( GET_META_NAME( name ), GET_META_ID( name ) ); \
 		ILuaObject *META__index = Lua()->GetNewTable();
 
-#define REG_META_FUNCTION( meta, name ) \
-	META__index->SetMember( #name, meta##__##name )
-
-#define REG_META_CALLBACK( meta, name ) \
-	META__tbl->SetMember( #name, meta##__##name )
-
-#define REG_META_CALLBACK_( meta, name, idx ) \
-	META__tbl->SetMember( #idx, name )
+#define REG_META_FUNCTION( meta, name ) 	META__index->SetMember( #name, meta##__##name )
+#define REG_META_CALLBACK( meta, name ) 	META__tbl->SetMember( #name, meta##__##name )
+#define REG_META_CALLBACK_( meta, name, idx ) 	META__tbl->SetMember( #idx, name )
 
 #define END_META_REGISTRATION( ) \
 		META__tbl->SetMember( "__index", META__index ); \
@@ -155,12 +150,9 @@ luaStateList_t *GetLuaStates( void );
 
 // Globals (GLBL_)
 
-#define GLBL_FUNCTION( name )				LUA_FUNCTION( _G__##name )
-
-#define EXT_GLBL_FUNCTION( name )			extern GLBL_FUNCTION( name )
-
-#define REG_GLBL_FUNCTION( name )		Lua()->SetGlobal( #name, _G__##name )
-
+#define GLBL_FUNCTION( name )		LUA_FUNCTION( _G__##name )
+#define EXT_GLBL_FUNCTION( name )	extern GLBL_FUNCTION( name )
+#define REG_GLBL_FUNCTION( name )	Lua()->SetGlobal( #name, _G__##name )
 #define REG_GLBL_NUMBER( name )		Lua()->SetGlobal( #name, (float)name )
 #define REG_GLBL_STRING( name )		Lua()->SetGlobal( #name, (const char *)name )
 
@@ -195,7 +187,7 @@ extern ICvar *g_pCVarServer;
 
 #endif
 
-// Cross-platform //
+// Platform definitions //
 
 #ifdef _WIN32
 
@@ -206,9 +198,7 @@ extern ICvar *g_pCVarServer;
 #define CNetChan_ProcessMessages_SIG "\x83\xEC\x34\x53\x55\x89\x4C\x24\x08\x56"
 #define CNetChan_ProcessMessages_MSK "xxxxxxxxxx"
 
-#else
-
-#define GetModuleHandle(name) dlopen(name, RTLD_LAZY)
+#elif defined _LINUX
 
 #define ENGINE_LIB "engine.so"
 #define CLIENT_LIB NULL

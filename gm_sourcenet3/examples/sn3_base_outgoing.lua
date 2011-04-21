@@ -21,8 +21,8 @@ hook.Add( "PreSendDatagram", "OutFilter", function( netchan, ... )
 
 		write:Seek( 0 )
 		
-		while ( read:GetNumBitsLeft() >= 6 ) do
-			local msg = read:ReadUBitLong( 6 )
+		while ( read:GetNumBitsLeft() >= NET_MESSAGE_BITS ) do
+			local msg = read:ReadUBitLong( NET_MESSAGE_BITS )
 			local handler = NET_MESSAGES[ msg ]
 
 			if ( !handler ) then
@@ -33,8 +33,8 @@ hook.Add( "PreSendDatagram", "OutFilter", function( netchan, ... )
 				end
 
 				if ( !handler ) then
-					Msg( "Unknown Outgoing Message: " .. msg .. "\n" )
-					
+					Msg( "Unknown outgoing message: " .. msg .. "\n" )
+
 					write:Seek( totalbits )
 
 					break

@@ -1,13 +1,16 @@
-// Module header //
-
+// Required interfaces
 #define IVENGINESERVER_INTERFACE
 #define IVENGINECLIENT_INTERFACE
 #define ICVAR_INTERFACE
 
+// Main header
 #include "main.h"
 
-// Extension headers //
+// Engine headers
+#include "net.h"
+#include "protocol.h"
 
+// Lua extensions
 #include "gl_hooks.h"
 #include "gl_bitbuf_write.h"
 #include "gl_bitbuf_read.h"
@@ -23,32 +26,51 @@
 #include "gl_igameeventmanager2.h"
 #include "gl_igameevent.h"
 
-// Misc headers //
-
-#include "net.h"
-#include "protocol.h"
-
+// Platform specific headers
 #ifdef WIN32
 #include <windows.h>
 #else
 #include "memutils.h"
 #endif
 
-// Entry points //
-
+// Entry points
 GMOD_MODULE( Open, Close );
 
-// Multiple Lua state support //
-
+// Multiple Lua state support
 luaStateList_t g_LuaStates;
 
 luaStateList_t *GetLuaStates( void ) { return &g_LuaStates; }
 
-#define ADD_LUA_STATE( L )			g_LuaStates.AddToTail( L )
-#define REMOVE_LUA_STATE( L )		g_LuaStates.FindAndRemove( L )
+#define ADD_LUA_STATE( L ) \
+{ \
+	UsesLua(); \
+	multiStateInfo msi; \
+	msi.L = L; \
+	ILuaObject *_G_hook = Lua()->GetGlobal( "hook" ); \
+	ILuaObject *_G_hook_Call = _G_hook->GetMember( "Call" ); \
+	_G_hook_Call->Push(); \
+	msi.ref_hook_Call = Lua()->GetReference( -1, true ); \
+	_G_hook_Call->UnReference(); \
+	_G_hook->UnReference(); \
+	g_LuaStates.AddToTail( msi ); \
+}
 
-// Interfaces //
+#define REMOVE_LUA_STATE( L ) \
+{ \
+	UsesLua(); \
+	for ( int i = 0; i < g_LuaStates.Count(); i++ ) \
+	{ \
+		multiStateInfo msi = g_LuaStates[i]; \
+		if ( msi.L == L ) \
+		{ \
+			Lua()->FreeReference( msi.ref_hook_Call ); \
+			g_LuaStates.Remove( i ); \
+			break; \
+		} \
+	} \
+}
 
+// Interfaces
 CreateInterfaceFn fnEngineFactory = NULL;
 
 IVEngineServer *g_pEngineServer = NULL;
@@ -57,14 +79,12 @@ IVEngineClient *g_pEngineClient = NULL;
 ICvar *g_pCVarClient = NULL;
 ICvar *g_pCVarServer = NULL;
 
-// Hooks //
-
+// Hooks
 #include "../simplescan/csimplescan.h"
 
 void *CNetChan_ProcessMessages_T = NULL;
 
-// Garbage Collection //
-
+// Garbage collection
 LUA_FUNCTION( std__gc )
 {
 	UsesLua();
@@ -74,8 +94,7 @@ LUA_FUNCTION( std__gc )
 	return 0;
 }
 
-// Init module //
-
+// Module load
 int Open( lua_State *L )
 {
 	ADD_LUA_STATE( L );
@@ -111,7 +130,9 @@ int Open( lua_State *L )
 			return 0;
 		}
 
+#ifdef _WIN32
 		g_pCVarClient = *(ICvar **)GetProcAddress( GetModuleHandle( CLIENT_LIB ), "cvar" );
+#endif
 
 		if ( !g_pCVarClient )
 		{
@@ -122,7 +143,24 @@ int Open( lua_State *L )
 	}
 	else
 	{
+#ifdef _WIN32
 		g_pCVarServer = *(ICvar **)GetProcAddress( GetModuleHandle( SERVER_LIB ), "cvar" );
+#elif defined _LINUX
+		/*void *hServer = dlopen( SERVER_LIB, RTLD_NOW );
+		if ( hServer )
+		{
+			g_pCVarServer = *(ICvar **)ResolveSymbol( hServer, "g_pCVar" );
+
+			dlclose( hServer );
+		}*/
+
+		void *hEngine = dlopen( ENGINE_LIB, RTLD_NOW );
+		if ( hEngine )
+		{
+			g_pCVarServer = *(ICvar **)ResolveSymbol( hEngine, "g_pCVar" );
+			dlclose( hEngine );
+		}
+#endif
 
 		if ( !g_pCVarServer )
 		{
@@ -161,6 +199,8 @@ int Open( lua_State *L )
 
 	REG_GLBL_NUMBER( NUM_BACKUP_COMMAND_BITS );
 	REG_GLBL_NUMBER( MAX_BACKUP_COMMANDS );
+
+	REG_GLBL_NUMBER( NET_MESSAGE_BITS );
 
 	REG_GLBL_NUMBER( net_NOP );
 	REG_GLBL_NUMBER( net_Disconnect );
@@ -239,7 +279,7 @@ int Open( lua_State *L )
 
 	REG_GLBL_NUMBER( MAX_CUSTOM_FILES );
 
-	BEGIN_META_REGISTRATION( sn3_bf_write )
+	BEGIN_META_REGISTRATION( sn3_bf_write );
 		REG_META_FUNCTION( sn3_bf_write, GetBasePointer );
 		REG_META_FUNCTION( sn3_bf_write, GetMaxNumBits );
 		REG_META_FUNCTION( sn3_bf_write, GetNumBitsWritten );
@@ -299,8 +339,6 @@ int Open( lua_State *L )
 		REG_META_FUNCTION( sn3_bf_read, SeekRelative );
 
 		REG_META_FUNCTION( sn3_bf_read, TotalBytesAvailable );
-
-		REG_META_FUNCTION( sn3_bf_read, FinishReading );
 
 		REG_META_FUNCTION( sn3_bf_read, FinishReading );
 	END_META_REGISTRATION();
@@ -505,31 +543,39 @@ int Open( lua_State *L )
 
 	REG_GLBL_FUNCTION( Attach__CNetChan_ProcessPacket );
 	REG_GLBL_FUNCTION( Detach__CNetChan_ProcessPacket );
+
 	REG_GLBL_FUNCTION( Attach__CNetChan_SendDatagram );
 	REG_GLBL_FUNCTION( Detach__CNetChan_SendDatagram );
+
 	REG_GLBL_FUNCTION( Attach__CNetChan_Shutdown );
 	REG_GLBL_FUNCTION( Detach__CNetChan_Shutdown );
 
 	REG_GLBL_FUNCTION( Attach__INetChannelHandler_ConnectionStart );
 	REG_GLBL_FUNCTION( Detach__INetChannelHandler_ConnectionStart );
+
 	REG_GLBL_FUNCTION( Attach__INetChannelHandler_ConnectionClosing );
 	REG_GLBL_FUNCTION( Detach__INetChannelHandler_ConnectionClosing );
+	
 	REG_GLBL_FUNCTION( Attach__INetChannelHandler_ConnectionCrashed );
-	REG_GLBL_FUNCTION( Attach__INetChannelHandler_ConnectionCrashed );
+	REG_GLBL_FUNCTION( Detach__INetChannelHandler_ConnectionCrashed );
+	
 	REG_GLBL_FUNCTION( Attach__INetChannelHandler_PacketStart );
 	REG_GLBL_FUNCTION( Detach__INetChannelHandler_PacketStart );
+
 	REG_GLBL_FUNCTION( Attach__INetChannelHandler_PacketEnd );
 	REG_GLBL_FUNCTION( Detach__INetChannelHandler_PacketEnd );
+
 	REG_GLBL_FUNCTION( Attach__INetChannelHandler_FileRequested );
 	REG_GLBL_FUNCTION( Detach__INetChannelHandler_FileRequested );
+
 	REG_GLBL_FUNCTION( Attach__INetChannelHandler_FileReceived );
 	REG_GLBL_FUNCTION( Detach__INetChannelHandler_FileReceived );
+
 	REG_GLBL_FUNCTION( Attach__INetChannelHandler_FileDenied );
 	REG_GLBL_FUNCTION( Detach__INetChannelHandler_FileDenied );
 
 	REG_GLBL_FUNCTION( Attach__CNetChan_ProcessMessages );
 	REG_GLBL_FUNCTION( Detach__CNetChan_ProcessMessages );
-
 
 	if ( !IS_ATTACHED( CNetChan_ProcessMessages ) )
 	{
@@ -554,8 +600,7 @@ int Open( lua_State *L )
 	return 0;
 }
 
-// Shutdown module //
-
+// Module shutdown
 int Close( lua_State *L )
 {
 	REMOVE_LUA_STATE( L );

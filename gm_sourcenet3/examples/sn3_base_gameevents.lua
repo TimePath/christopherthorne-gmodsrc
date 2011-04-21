@@ -14,7 +14,7 @@ local function FilterGameEvent( netchan, read, write, hookname )
 		local result = hook.Call( hookname, nil, netchan, event )
 
 		if ( result != false ) then
-			write:WriteUBitLong( svc_GameEvent, 6 )
+			write:WriteUBitLong( svc_GameEvent, NET_MESSAGE_BITS )
 
 			if ( type( result ) == "IGameEvent" ) then
 				local serialized_data = UCHARPTR( 2048 )

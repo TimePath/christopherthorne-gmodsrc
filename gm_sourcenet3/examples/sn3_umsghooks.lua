@@ -52,7 +52,7 @@ function ProcessUserMessage( msg, data, bits )
 end
 
 FilterIncomingMessage( svc_UserMessage, function( netchan, read, write )
-	write:WriteUBitLong( svc_UserMessage, 6 )
+	write:WriteUBitLong( svc_UserMessage, NET_MESSAGE_BITS )
 	
 	local msg = read:ReadByte()
 	local bits = read:ReadUBitLong( 11 )

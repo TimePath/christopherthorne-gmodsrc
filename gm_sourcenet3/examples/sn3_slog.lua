@@ -11,6 +11,6 @@ FilterIncomingMessage( net_StringCmd, function( netchan, read, write )
 		return
 	end
 
-	write:WriteUBitLong( net_StringCmd, 6 )
+	write:WriteUBitLong( net_StringCmd, NET_MESSAGE_BITS )
 	write:WriteString( cmd )
 end )
