@@ -163,7 +163,7 @@ enum
 #define clc_FileCRCCheck		14		// client is sending a file's CRC to the server to be verified.
 #define clc_CmdKeyValues		16
 #define clc_FileMD5Check		17		// client is sending a file's MD5 to the server to be verified.
-#define CLC_LASTMSG			18		//	last known client message
+#define CLC_LASTMSG			17		//	last known client message
 
 #define RES_FATALIFMISSING	(1<<0)   // Disconnect if we can't get this file.
 #define RES_PRELOAD			(1<<1)  // Load on client rather than just reserving name
