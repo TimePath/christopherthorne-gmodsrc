@@ -146,18 +146,22 @@ int Open( lua_State *L )
 #ifdef _WIN32
 		g_pCVarServer = *(ICvar **)GetProcAddress( GetModuleHandle( SERVER_LIB ), "cvar" );
 #elif defined _LINUX
-		/*void *hServer = dlopen( SERVER_LIB, RTLD_NOW );
+		/*void *hServer = dlopen( SERVER_LIB, RTLD_NOW );
+
 		if ( hServer )
 		{
 			g_pCVarServer = *(ICvar **)ResolveSymbol( hServer, "g_pCVar" );
 
-			dlclose( hServer );
+			dlclose( hServer );
+
 		}*/
 
-		void *hEngine = dlopen( ENGINE_LIB, RTLD_NOW );
+		void *hEngine = dlopen( ENGINE_LIB, RTLD_NOW );
+
 		if ( hEngine )
 		{
-			g_pCVarServer = *(ICvar **)ResolveSymbol( hEngine, "g_pCVar" );
+			g_pCVarServer = *(ICvar **)ResolveSymbol( hEngine, "g_pCVar" );
+
 			dlclose( hEngine );
 		}
 #endif
