@@ -7,9 +7,6 @@
 // GMod entry points
 GMOD_MODULE( Open, Close );
 
-// GMod hook.Call reference
-int g_refHookCall = 0;
-
 // Previous spew function
 SpewOutputFunc_t g_fnOldSpew = NULL;
 
