@@ -66,7 +66,7 @@ function HookNetChannel( ... )
 
 	local attached = false
 
-	for i = 1, 255 do
+	for i = 1, 256 do
 		local netchan = CNetChan( i )
 		
 		if ( netchan ) then
