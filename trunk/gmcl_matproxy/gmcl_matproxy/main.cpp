@@ -327,7 +327,8 @@ extern "C" int GM_EXPORT gmod_open( ILuaInterface *i )
 
 void Close( lua_State *L )
 {
-	g_pMaterialSystem->SetMaterialProxyFactory( g_pOldProxyFactory ); // Revert to old proxy factory
+	if ( g_pMaterialSystem )
+		g_pMaterialSystem->SetMaterialProxyFactory( g_pOldProxyFactory ); // Revert to old proxy factory
 
 	for ( int i = g_LuaMaterialProxies.Count(); --i >= 0; )
 	{
