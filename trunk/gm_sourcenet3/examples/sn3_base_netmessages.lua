@@ -245,16 +245,6 @@ NET_MESSAGES = {
 				
 				local unk3
 
-				write:WriteUBitLong( clc_FileCRCCheck, NET_MESSAGE_BITS )
-				
-				local unk1 = read:ReadOneBit()
-				write:WriteOneBit( unk1 )
-				
-				local gamepath = read:ReadUBitLong( 2 )
-				write:WriteUBitLong( gamepath, 2 )
-				
-				local unk3
-
 				if ( gamepath == 0 ) then
 					unk3 = read:ReadString() -- 10h
 					write:WriteString( unk3 )
@@ -292,16 +282,6 @@ NET_MESSAGES = {
 			DefaultCopy = function( netchan, read, write )
 				write:WriteUBitLong( clc_FileMD5Check, NET_MESSAGE_BITS )
 
-				local unk1 = read:ReadOneBit()
-				write:WriteOneBit( unk1 )
-				
-				local gamepath = read:ReadUBitLong( 2 )
-				write:WriteUBitLong( gamepath, 2 )
-				
-				local unk3
-
-				write:WriteUBitLong( clc_FileCRCCheck, NET_MESSAGE_BITS )
-				
 				local unk1 = read:ReadOneBit()
 				write:WriteOneBit( unk1 )
 				
