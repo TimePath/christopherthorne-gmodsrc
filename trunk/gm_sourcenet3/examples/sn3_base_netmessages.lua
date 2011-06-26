@@ -126,8 +126,6 @@ NET_MESSAGES = {
 				local guid = read:ReadString() -- 20h, hashed CD Key (32 hex alphabetic chars + 0 terminator)
 				write:WriteString( guid )
 
-				debugprint( "clc_ClientInfo", spawncount, sendTableCRC, ishltv == 1, friendsID, guid )
-
 				for i = 1, MAX_CUSTOM_FILES do
 					local useFile = read:ReadOneBit() -- 40h, 44h, 48h, 4Ch
 					write:WriteOneBit( useFile )
@@ -138,14 +136,17 @@ NET_MESSAGES = {
 						fileCRC = read:ReadUBitLong( 32 )
 
 						write:WriteUBitLong( fileCRC, 32 )
+						
+						debugprint( "\t> customization file " .. i .. " = " .. fileCRC )
 					else
 						fileCRC = 0
 					end
-					
-					if ( useFile == 1 ) then
-						debugprint( "\t> customization file " .. tostring( i ) .. " = " .. tostring( fileCRC ) )
-					end
 				end
+				
+				local unk = read:ReadOneBit() -- 19h, probably replay related
+				write:WriteOneBit( unk )
+				
+				debugprint( "clc_ClientInfo", spawncount, sendTableCRC, ishltv == 1, friendsID, guid, unk )
 			end
 		},
 		
@@ -244,6 +245,16 @@ NET_MESSAGES = {
 				
 				local unk3
 
+				write:WriteUBitLong( clc_FileCRCCheck, NET_MESSAGE_BITS )
+				
+				local unk1 = read:ReadOneBit()
+				write:WriteOneBit( unk1 )
+				
+				local gamepath = read:ReadUBitLong( 2 )
+				write:WriteUBitLong( gamepath, 2 )
+				
+				local unk3
+
 				if ( gamepath == 0 ) then
 					unk3 = read:ReadString() -- 10h
 					write:WriteString( unk3 )
@@ -281,6 +292,16 @@ NET_MESSAGES = {
 			DefaultCopy = function( netchan, read, write )
 				write:WriteUBitLong( clc_FileMD5Check, NET_MESSAGE_BITS )
 
+				local unk1 = read:ReadOneBit()
+				write:WriteOneBit( unk1 )
+				
+				local gamepath = read:ReadUBitLong( 2 )
+				write:WriteUBitLong( gamepath, 2 )
+				
+				local unk3
+
+				write:WriteUBitLong( clc_FileCRCCheck, NET_MESSAGE_BITS )
+				
 				local unk1 = read:ReadOneBit()
 				write:WriteOneBit( unk1 )
 				
@@ -387,7 +408,11 @@ NET_MESSAGES = {
 				local hostname = read:ReadString()
 				write:WriteString( hostname )
 				
-				debugprint( "svc_ServerInfo", hostname )
+				-- Unknown bit (1Ah), probably replay
+				local unk = read:ReadOneBit()
+				write:WriteOneBit( unk )
+				
+				debugprint( "svc_ServerInfo", hostname, unk )
 			end
 		},
 		
@@ -538,7 +563,7 @@ NET_MESSAGES = {
 				local client = read:ReadByte() -- 10h				
 				write:WriteByte( client )
 
-				local unk2 = read:ReadByte() -- 14h
+				local unk2 = read:ReadByte() -- 14h				
 				write:WriteByte( unk2 )
 
 				local bits = read:ReadWord() -- 18h
