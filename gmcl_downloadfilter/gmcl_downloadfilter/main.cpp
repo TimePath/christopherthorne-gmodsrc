@@ -64,11 +64,11 @@ SETUP_SIMPLE_DETOUR( CL_QueueDownload_Detour, CL_QueueDownload_T, CL_QueueDownlo
 
 int Open( lua_State *L )
 {
-	// Setup engine.dll scanner
-	CByteScanner engineScanner( "engine.dll" );
-
 	// Store Lua interface
 	gLua = Lua();
+
+	// Setup engine.dll scanner
+	CByteScanner engineScanner( "engine.dll" );
 
 	// Scan for CL_QueueDownload
 	CL_QueueDownload_T = (CL_QueueDownload_t)engineScanner.FindCodePattern( "\xF7\x05\x54\xCB\xD2\x0D\x00\x10\x00\x00\x74\x16\x8B\x4C\x24\x04", "xx????xxxxx?xxxx" );
