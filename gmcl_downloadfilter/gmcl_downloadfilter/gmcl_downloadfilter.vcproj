@@ -114,6 +114,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="common;J:/Data/Misc/Valve/SDK/HL2GMOD/common;J:/Data/Misc/Valve/SDK/HL2GMOD/game/client;J:/Data/Misc/Valve/SDK/HL2GMOD/game/shared;J:/Data/Misc/Valve/SDK/HL2GMOD/game/server;J:/Data/Misc/Valve/SDK/HL2GMOD/public;J:/Data/Misc/Valve/SDK/HL2GMOD/public/tier0;J:/Data/Misc/Valve/SDK/HL2GMOD/public/tier1;J:/Data/Misc/Valve/SDK/HL2GMOD/public/mathlib;J:/Data/Misc/Valve/SDK/HL2GMOD/public/materialsystem"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GMCL_DOWNLOADFILTER_EXPORTS"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -132,8 +133,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="tier0.lib tier1.lib detours/lib/detours.lib"
+				AdditionalDependencies="tier0.lib tier1.lib simpledetour/detours.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="J:/Data/Misc/Valve/SDK/HL2GMOD/lib/public"
 				IgnoreDefaultLibraryNames="libcmtd;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -173,14 +175,22 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\gmcl_downloadfilter.cpp"
+				RelativePath=".\main.cpp"
 				>
 			</File>
 			<Filter
-				Name="SigScan"
+				Name="bytescanner"
 				>
 				<File
-					RelativePath=".\sigscan\src\sigscan.cpp"
+					RelativePath=".\bytescanner\cbytescanner.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="simpledetour"
+				>
+				<File
+					RelativePath=".\simpledetour\csimpledetour.cpp"
 					>
 				</File>
 			</Filter>
@@ -190,47 +200,23 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\gmcl_downloadfilter.h"
-				>
-			</File>
 			<Filter
-				Name="SigScan"
+				Name="bytescanner"
 				>
 				<File
-					RelativePath=".\sigscan\include\sigscan.h"
+					RelativePath=".\bytescanner\cbytescanner.h"
 					>
 				</File>
 			</Filter>
 			<Filter
-				Name="Detours"
+				Name="simpledetour"
 				>
 				<File
-					RelativePath=".\detours\include\detours.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="GMInterface"
-				>
-				<File
-					RelativePath=".\gminterface\include\GMLuaModule.h"
+					RelativePath=".\simpledetour\csimpledetour.h"
 					>
 				</File>
 				<File
-					RelativePath=".\gminterface\include\ILuaInterface.h"
-					>
-				</File>
-				<File
-					RelativePath=".\gminterface\include\ILuaModuleManager.h"
-					>
-				</File>
-				<File
-					RelativePath=".\gminterface\include\ILuaObject.h"
-					>
-				</File>
-				<File
-					RelativePath=".\gminterface\include\ILuaShared.h"
+					RelativePath=".\simpledetour\detours.h"
 					>
 				</File>
 			</Filter>
