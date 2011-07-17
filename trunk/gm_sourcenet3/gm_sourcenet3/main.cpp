@@ -36,6 +36,11 @@
 // Entry points
 GMOD_MODULE( Open, Close );
 
+// Enable/disable SendDatagram hooking
+#ifdef _WIN32
+bool g_bPatchedNetChunk;
+#endif
+
 // Multiple Lua state support
 luaStateList_t g_LuaStates;
 
@@ -581,11 +586,11 @@ int Open( lua_State *L )
 	REG_GLBL_FUNCTION( Attach__CNetChan_ProcessMessages );
 	REG_GLBL_FUNCTION( Detach__CNetChan_ProcessMessages );
 
+	CSimpleScan engineScn( fnEngineFactory );
+
 	if ( !IS_ATTACHED( CNetChan_ProcessMessages ) )
 	{
 #ifdef _WIN32
-		CSimpleScan engineScn( fnEngineFactory );
-
 		engineScn.Find( CNetChan_ProcessMessages_SIG, CNetChan_ProcessMessages_MSK, (void **)&CNetChan_ProcessMessages_T );
 #else
 		void *hEngine = dlopen( ENGINE_LIB, RTLD_NOW );
@@ -598,8 +603,31 @@ int Open( lua_State *L )
 		}
 #endif
 		if ( !CNetChan_ProcessMessages_T )
+		{
 			Msg( "[gm_sourcenet3] Failed to locate CNetChan::ProcessMessages, report this!\n" );
+		}
 	}
+
+#ifdef _WIN32
+	unsigned int ulNetThreadChunk;
+	
+	if ( engineScn.Find( NETCHUNK_SIG, NETCHUNK_MSK, (void **)&ulNetThreadChunk) )
+	{
+		ulNetThreadChunk += NETCHUNK_SIG_OFFSET;
+
+		BEGIN_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
+			memcpy( (void *)ulNetThreadChunk, NETPATCH_NEW, NETPATCH_LEN );
+		FINISH_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
+
+		g_bPatchedNetChunk = true;
+	}
+	else
+	{
+		Msg( "[gm_sourcenet3] Failed to locate net thread chunk, report this!\n" );
+
+		g_bPatchedNetChunk = false;
+	}
+#endif
 
 	return 0;
 }
@@ -608,6 +636,24 @@ int Open( lua_State *L )
 int Close( lua_State *L )
 {
 	REMOVE_LUA_STATE( L );
+
+#ifdef _WIN32
+	if ( g_bPatchedNetChunk )
+	{
+		CSimpleScan engineScn( fnEngineFactory );
+
+		unsigned int ulNetThreadChunk;
+		
+		if ( engineScn.Find( NETCHUNK_SIG, NETCHUNK_MSK, (void **)&ulNetThreadChunk) )
+		{
+			ulNetThreadChunk += NETCHUNK_SIG_OFFSET;
+
+			BEGIN_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
+				memcpy( (void *)ulNetThreadChunk, NETPATCH_OLD, NETPATCH_LEN );
+			FINISH_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
+		}
+	}
+#endif
 
 	return 0;
 }

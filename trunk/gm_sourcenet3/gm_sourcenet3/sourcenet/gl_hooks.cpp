@@ -43,6 +43,11 @@ DEFVFUNC_( CNetChan_SendDatagram_T, int, ( CNetChan *netchan, sn3_bf_write *data
 
 int VFUNC CNetChan_SendDatagram_H( CNetChan *netchan, sn3_bf_write *data )
 {
+#ifdef _WIN32
+	if ( !g_bPatchedNetChunk )
+		return CNetChan_SendDatagram_T( netchan, data );
+#endif
+
 	BEGIN_MULTISTATE_HOOK( "PreSendDatagram" );
 		DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
 		DO_MULTISTATE_HOOK( PUSH_META( data, sn3_bf_write ) );
@@ -380,48 +385,6 @@ bool CNetChan_ProcessMessages_H( CNetChan *netchan, sn3_bf_read &buf )
 
 	return true;
 }
-
-#ifdef _WIN32
-
-#define BEGIN_MEMEDIT( addr, size ) \
-{ \
-	DWORD previous; \
-	VirtualProtect( addr, \
-			size, \
-			PAGE_EXECUTE_READWRITE, \
-			&previous ); \
-
-#define FINISH_MEMEDIT( addr, size ) \
-	VirtualProtect( addr, \
-			size, \
-			previous, \
-			NULL ); \
-}
-
-#elif defined _LINUX
-
-#include <sys/mman.h>
-#include <unistd.h>
-
-inline unsigned char *PageAlign( unsigned char *addr, long page )
-{
-	return addr - ( (DWORD)addr % page );
-}
-
-#define BEGIN_MEMEDIT( addr, size ) \ 
-{ \
-	long page = sysconf( _SC_PAGESIZE ); \
-	mprotect( PageAlign( (unsigned char *)addr, page ), \
-			page, \
-			PROT_EXEC | PROT_READ | PROT_WRITE );
-
-#define FINISH_MEMEDIT( addr, size ) \
-	mprotect( PageAlign( (unsigned char *)addr, page ), \
-			page, \
-			PROT_EXEC | PROT_READ ); \
-}
-
-#endif
 
 unsigned char oldbytes[ 1 + sizeof( DWORD ) ];
 unsigned char newbytes[ 1 + sizeof( DWORD ) ] = { 0xE9, 0x00, 0x00, 0x00, 0x00 };
