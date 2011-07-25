@@ -543,8 +543,8 @@ NET_MESSAGES = {
 				local client = read:ReadByte() -- 10h				
 				write:WriteByte( client )
 
-				local unk2 = read:ReadByte() -- 14h				
-				write:WriteByte( unk2 )
+				local proximity = read:ReadByte() -- 14h				
+				write:WriteByte( proximity )
 
 				local bits = read:ReadWord() -- 18h
 				write:WriteWord( bits )
@@ -553,7 +553,7 @@ NET_MESSAGES = {
 				write:WriteBits( voicedata, bits )
 				voicedata:Delete()
 				
-				debugprint( "svc_VoiceData", client, unk2, bits )
+				debugprint( "svc_VoiceData", client, proximity, bits )
 			end
 		},
 
