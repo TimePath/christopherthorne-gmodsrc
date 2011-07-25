@@ -6,8 +6,8 @@ FilterIncomingMessage( svc_VoiceData, function( netchan, read, write )
 	local client = read:ReadByte()		
 	write:WriteByte( client )
 
-	local unknown = read:ReadByte()
-	write:WriteByte( unknown )
+	local proximity = read:ReadByte()
+	write:WriteByte( proximity )
 
 	local bits = read:ReadWord()
 	write:WriteWord( bits )
