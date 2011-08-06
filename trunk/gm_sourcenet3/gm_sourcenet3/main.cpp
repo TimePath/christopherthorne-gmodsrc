@@ -102,9 +102,9 @@ LUA_FUNCTION( std__gc )
 // Module load
 int Open( lua_State *L )
 {
-	ADD_LUA_STATE( L );
-
 	UsesLua();
+
+	ADD_LUA_STATE( L );	
 
 	fnEngineFactory = Sys_GetFactory( ENGINE_LIB );
 
@@ -609,23 +609,26 @@ int Open( lua_State *L )
 	}
 
 #ifdef _WIN32
-	unsigned int ulNetThreadChunk;
-	
-	if ( engineScn.Find( NETCHUNK_SIG, NETCHUNK_MSK, (void **)&ulNetThreadChunk) )
+	if ( !Lua()->IsClient() )
 	{
-		ulNetThreadChunk += NETCHUNK_SIG_OFFSET;
+		unsigned int ulNetThreadChunk;
+		
+		if ( engineScn.Find( NETCHUNK_SIG, NETCHUNK_MSK, (void **)&ulNetThreadChunk) )
+		{
+			ulNetThreadChunk += NETCHUNK_SIG_OFFSET;
 
-		BEGIN_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
-			memcpy( (void *)ulNetThreadChunk, NETPATCH_NEW, NETPATCH_LEN );
-		FINISH_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
+			BEGIN_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
+				memcpy( (void *)ulNetThreadChunk, NETPATCH_NEW, NETPATCH_LEN );
+			FINISH_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
 
-		g_bPatchedNetChunk = true;
-	}
-	else
-	{
-		Msg( "[gm_sourcenet3] Failed to locate net thread chunk, report this!\n" );
+			g_bPatchedNetChunk = true;
+		}
+		else
+		{
+			Msg( "[gm_sourcenet3] Failed to locate net thread chunk, report this!\n" );
 
-		g_bPatchedNetChunk = false;
+			g_bPatchedNetChunk = false;
+		}
 	}
 #endif
 
@@ -635,22 +638,27 @@ int Open( lua_State *L )
 // Module shutdown
 int Close( lua_State *L )
 {
+	UsesLua();
+
 	REMOVE_LUA_STATE( L );
 
 #ifdef _WIN32
-	if ( g_bPatchedNetChunk )
+	if ( !Lua()->IsClient() )
 	{
-		CSimpleScan engineScn( fnEngineFactory );
-
-		unsigned int ulNetThreadChunk;
-		
-		if ( engineScn.Find( NETCHUNK_SIG, NETCHUNK_MSK, (void **)&ulNetThreadChunk) )
+		if ( g_bPatchedNetChunk )
 		{
-			ulNetThreadChunk += NETCHUNK_SIG_OFFSET;
+			CSimpleScan engineScn( fnEngineFactory );
 
-			BEGIN_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
-				memcpy( (void *)ulNetThreadChunk, NETPATCH_OLD, NETPATCH_LEN );
-			FINISH_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
+			unsigned int ulNetThreadChunk;
+			
+			if ( engineScn.Find( NETCHUNK_SIG, NETCHUNK_MSK, (void **)&ulNetThreadChunk) )
+			{
+				ulNetThreadChunk += NETCHUNK_SIG_OFFSET;
+
+				BEGIN_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
+					memcpy( (void *)ulNetThreadChunk, NETPATCH_OLD, NETPATCH_LEN );
+				FINISH_MEMEDIT( (void *)ulNetThreadChunk, NETPATCH_LEN );
+			}
 		}
 	}
 #endif
