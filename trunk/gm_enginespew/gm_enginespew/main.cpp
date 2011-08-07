@@ -4,15 +4,28 @@
 // GMod
 #include "GMLuaModuleEx.h"
 
+// Win32
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 // GMod entry points
 GMOD_MODULE( Open, Close );
 
 // Previous spew function
 SpewOutputFunc_t g_fnOldSpew = NULL;
 
+// Main thread ID
+int g_iMainThread;
+
 // New spew function
 SpewRetval_t LuaSpew( SpewType_t spewType, const char *pMsg )
 {
+#ifdef _WIN32
+	if ( GetCurrentThreadId() != g_iMainThread )
+		return SPEW_CONTINUE;
+#endif
+
 	// Check for NULL pointer
 
 	if ( !pMsg )
@@ -58,9 +71,16 @@ int Open( lua_State *L )
 {
 	ADD_LUA_STATE( L );
 
-	g_fnOldSpew = GetSpewOutputFunc();
+	if ( g_LuaStates.Count() == 1 )
+	{
+#ifdef _WIN32
+		g_iMainThread = GetCurrentThreadId();
+#endif
 
-	SpewOutputFunc( LuaSpew );
+		g_fnOldSpew = GetSpewOutputFunc();
+
+		SpewOutputFunc( LuaSpew );
+	}
 
 	return 0;
 }
@@ -70,7 +90,10 @@ int Close( lua_State *L )
 {
 	REMOVE_LUA_STATE( L );
 
-	SpewOutputFunc( g_fnOldSpew );
+	if ( g_LuaStates.Count() == 0 )
+	{
+		SpewOutputFunc( g_fnOldSpew );
+	}
 
 	return 0;
 }
