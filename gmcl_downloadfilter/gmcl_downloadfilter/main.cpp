@@ -40,17 +40,10 @@ void CL_QueueDownload_H( const char *pszFileName )
 
 	// Returned value
 	ILuaObject *returnObject = gLua->GetReturn( 0 );
-	
-	bool bDownload;
 
 	// If the hook returns anything other than nil or true then
 	// do not add to download queue.
 	if ( returnObject->isNil() || returnObject->GetBool() )
-		bDownload = true;
-	else
-		bDownload = false;
-
-	if ( bDownload )
 		CL_QueueDownload_T( pszFileName );
 
 	// Cleanup
