@@ -1,0 +1,1 @@
+GM.Name = "HL2 Chess"
