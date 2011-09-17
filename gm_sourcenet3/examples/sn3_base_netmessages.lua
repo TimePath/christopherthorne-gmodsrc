@@ -351,10 +351,18 @@ NET_MESSAGES = {
 				local maxclasses = read:ReadWord()
 				write:WriteWord( maxclasses )
 
+--[[
 				-- The CRC of the server map must match the CRC of the client map. or else
-				--  the client is probably cheating.
+				-- the client is probably cheating.
 				local servermapcrc = read:ReadLong()
 				write:WriteLong( servermapcrc )
+--]]
+
+				-- The MD5 of the server map must match the CRC of the client map. or else
+				-- the client is probably cheating.
+				local servermapmd5 = read:ReadBytes( 16 )
+				write:WriteBytes( servermapmd5, 16 )
+				servermapmd5:Delete()
 
 				-- Amount of clients currently connected
 				local playernum = read:ReadByte()
