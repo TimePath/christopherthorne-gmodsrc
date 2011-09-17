@@ -1,0 +1,13 @@
+"Gamemode"
+{
+	"name"		"Half-Life 2 Chess"
+	"version"	"1.0"
+
+	"author_name"	"Christopher Thorne"
+	"author_email"	"christopher.thorne@live.co.uk"
+	"author_url"	""
+	
+	"icon"		""
+	"info"		""
+	"hide"		"1"
+}
