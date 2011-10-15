@@ -115,7 +115,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./;common;sourcenet;engine;J:/Data/Misc/Valve/SDK/HL2GMOD/common;J:/Data/Misc/Valve/SDK/HL2GMOD/public;J:/Data/Misc/Valve/SDK/HL2GMOD/public/tier0;J:/Data/Misc/Valve/SDK/HL2GMOD/public/tier1;J:/Data/Misc/Valve/SDK/HL2GMOD/public/mathlib;J:/Data/Misc/Valve/SDK/HL2GMOD/public/engine;J:/Data/Misc/Valve/SDK/HL2GMOD/public;J:/Data/Misc/Valve/SDK/HL2GMOD/game_shared;J:/Data/Misc/Valve/SDK/HL2GMOD/dlls;J:/Data/Misc/Valve/SDK/HL2GMOD/game/client;J:/Data/Misc/Valve/SDK/HL2GMOD/game/server;J:/Data/Misc/Valve/SDK/HL2GMOD/game/shared;"
+				AdditionalIncludeDirectories="./;common;sourcenet;engine;F:/Data/Misc/Valve/SDK/HL2GMOD/common;F:/Data/Misc/Valve/SDK/HL2GMOD/public;F:/Data/Misc/Valve/SDK/HL2GMOD/public/tier0;F:/Data/Misc/Valve/SDK/HL2GMOD/public/tier1;F:/Data/Misc/Valve/SDK/HL2GMOD/public/mathlib;F:/Data/Misc/Valve/SDK/HL2GMOD/public/engine;F:/Data/Misc/Valve/SDK/HL2GMOD/public;F:/Data/Misc/Valve/SDK/HL2GMOD/game_shared;F:/Data/Misc/Valve/SDK/HL2GMOD/dlls;F:/Data/Misc/Valve/SDK/HL2GMOD/game/client;F:/Data/Misc/Valve/SDK/HL2GMOD/game/server;F:/Data/Misc/Valve/SDK/HL2GMOD/game/shared;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GM_SOURCENET3_EXPORTS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -136,7 +136,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="tier0.lib tier1.lib ws2_32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="J:/Data/Misc/Valve/SDK/HL2GMOD/lib/public"
+				AdditionalLibraryDirectories="F:/Data/Misc/Valve/SDK/HL2GMOD/lib/public"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
