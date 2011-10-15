@@ -188,8 +188,8 @@ extern ICvar *g_pCVarServer;
 #define CLIENT_LIB "client.dll"
 #define SERVER_LIB "server.dll"
 
-#define CNetChan_ProcessMessages_SIG "\x83\xEC\x34\x53\x55\x89\x4C\x24\x08\x56"
-#define CNetChan_ProcessMessages_MSK "xxxxxxxxxx"
+#define CNetChan_ProcessMessages_SIG "\x83\xEC\x34\x53\x55\x89\x4C\x24\x08\x56\xB9"
+#define CNetChan_ProcessMessages_MSK "xx?xxxx??xx"
 
 // Net chunk patch
 // Disables per-client threads (hacky fix for SendDatagram hooking)
