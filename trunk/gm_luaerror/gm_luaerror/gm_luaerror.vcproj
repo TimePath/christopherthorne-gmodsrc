@@ -114,6 +114,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="common;simplescan;simpledetour;F:/Data/Misc/Valve/SDK/HL2GMOD/common;F:/Data/Misc/Valve/SDK/HL2GMOD/public;F:/Data/Misc/Valve/SDK/HL2GMOD/public/tier0;F:/Data/Misc/Valve/SDK/HL2GMOD/public/tier1;F:/Data/Misc/Valve/SDK/HL2GMOD/public/mathlib;F:/Data/Misc/Valve/SDK/HL2GMOD/public/engine;F:/Data/Misc/Valve/SDK/HL2GMOD/public;F:/Data/Misc/Valve/SDK/HL2GMOD/game_shared;F:/Data/Misc/Valve/SDK/HL2GMOD/dlls;F:/Data/Misc/Valve/SDK/HL2GMOD/game/client;F:/Data/Misc/Valve/SDK/HL2GMOD/game/server;F:/Data/Misc/Valve/SDK/HL2GMOD/game/shared;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GM_LUAERROR_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -132,9 +133,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="tier0.lib tier1.lib simpledetour/lib/detours.lib"
+				AdditionalDependencies="tier0.lib tier1.lib detours.lib"
 				LinkIncremental="1"
-				IgnoreDefaultLibraryNames="libcmtd;"
+				AdditionalLibraryDirectories="simpledetour;F:/Data/Misc/Valve/SDK/HL2GMOD/lib/public"
+				IgnoreDefaultLibraryNames="libcmt;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -173,26 +175,26 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\gm_luaerror.cpp"
+				RelativePath=".\main.cpp"
 				>
 			</File>
 			<Filter
-				Name="SimpleScan"
+				Name="simplescan"
 				>
 				<File
-					RelativePath=".\simplescan\src\csimplescan.cpp"
+					RelativePath=".\simplescan\csimplescan.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\simplescan\src\sigscan.cpp"
+					RelativePath=".\simplescan\sigscan.cpp"
 					>
 				</File>
 			</Filter>
 			<Filter
-				Name="SimpleDetour"
+				Name="simpledetour"
 				>
 				<File
-					RelativePath=".\simpledetour\src\csimpledetour.cpp"
+					RelativePath=".\simpledetour\csimpledetour.cpp"
 					>
 				</File>
 			</Filter>
@@ -206,36 +208,32 @@
 				RelativePath=".\cdetour.h"
 				>
 			</File>
-			<File
-				RelativePath=".\gm_luaerror.h"
-				>
-			</File>
 			<Filter
-				Name="SimpleScan"
+				Name="simpledetour"
 				>
 				<File
-					RelativePath=".\simplescan\include\csimplescan.h"
+					RelativePath=".\simpledetour\csimpledetour.h"
 					>
 				</File>
 				<File
-					RelativePath=".\simplescan\include\sigscan.h"
+					RelativePath=".\simpledetour\detours.h"
 					>
 				</File>
 			</Filter>
 			<Filter
-				Name="SimpleDetour"
+				Name="simplescan"
 				>
 				<File
-					RelativePath=".\simpledetour\include\csimpledetour.h"
+					RelativePath=".\simplescan\csimplescan.h"
 					>
 				</File>
 				<File
-					RelativePath=".\simpledetour\include\detours.h"
+					RelativePath=".\simplescan\sigscan.h"
 					>
 				</File>
 			</Filter>
 			<Filter
-				Name="GMInterface"
+				Name="common"
 				>
 				<File
 					RelativePath=".\gminterface\include\GMLuaModule.h"

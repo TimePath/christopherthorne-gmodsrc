@@ -1,4 +1,4 @@
-#include "../include/csimpledetour.h"
+#include "csimpledetour.h"
 
 CSimpleDetour::CSimpleDetour(void **old, void *replacement)
 {
