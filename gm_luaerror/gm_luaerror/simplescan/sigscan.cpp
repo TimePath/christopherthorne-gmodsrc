@@ -9,7 +9,7 @@
     #include <sys/stat.h> 
 #endif
  
-#include "..\include\sigscan.h"
+#include "sigscan.h"
  
 /* There is no ANSI ustrncpy */
 unsigned char* ustrncpy(unsigned char *dest, const unsigned char *src, int len) {

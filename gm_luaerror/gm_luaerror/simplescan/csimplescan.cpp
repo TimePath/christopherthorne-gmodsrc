@@ -1,4 +1,4 @@
-#include "../include/csimplescan.h"
+#include "csimplescan.h"
 
 CSimpleScan::CSimpleScan()
 {
