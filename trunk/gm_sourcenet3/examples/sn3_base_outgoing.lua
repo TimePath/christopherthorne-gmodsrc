@@ -12,7 +12,15 @@ HookNetChannel(
 	{ name = "CNetChan::SendDatagram" }
 )
 
-hook.Add( "PreSendDatagram", "OutFilter", function( netchan, ... )
+hook.Add( "PreSendDatagram", "OutFilter", function( netchan, localchan, ... )
+	if ( !sourcenet_isDedicatedServer() ) then
+		if ( netchan == localchan ) then
+			if ( SERVER ) then return end
+		else
+			if ( CLIENT ) then return end
+		end
+	end
+
 	local buffers = { ... }
 
 	for k, write in pairs( buffers ) do
@@ -24,6 +32,10 @@ hook.Add( "PreSendDatagram", "OutFilter", function( netchan, ... )
 		while ( read:GetNumBitsLeft() >= NET_MESSAGE_BITS ) do
 			local msg = read:ReadUBitLong( NET_MESSAGE_BITS )
 			local handler = NET_MESSAGES[ msg ]
+
+			--[[if ( msg != net_NOP && msg != 3 && msg != 9 ) then
+				Msg( "(out) Pre Message: " .. msg .. ", bits: " .. read:GetNumBitsRead() .. "/" .. totalbits .. "\n" )
+			end--]]
 
 			if ( !handler ) then
 				if ( CLIENT ) then
@@ -50,6 +62,10 @@ hook.Add( "PreSendDatagram", "OutFilter", function( netchan, ... )
 
 				break
 			end
+			
+			--[[if ( msg != net_NOP && msg != 3 && msg != 9 ) then
+				Msg( "(out) Post Message: " .. msg .. ", bits: " .. read:GetNumBitsRead() .. "/" .. totalbits .. "\n" )
+			end--]]
 		end
 		
 		read:FinishReading()

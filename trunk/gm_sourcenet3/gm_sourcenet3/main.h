@@ -108,7 +108,7 @@ extern bool g_bPatchedNetChunk;
 struct multiStateInfo
 {
 	lua_State *L;
-	int ref_hook_Call; // hook.Call
+	int ref_hook_Call;
 };
 
 typedef CUtlLinkedList<multiStateInfo> luaStateList_t;
@@ -197,9 +197,9 @@ extern ICvar *g_pCVarServer;
 #define NETPATCH_LEN 6
 #define NETPATCH_OLD "\x0F\x84\xC0\x00\x00\x00"
 #define NETPATCH_NEW "\xE9\xC1\x00\x00\x00\x90"
-#define NETCHUNK_SIG_OFFSET 19
-#define NETCHUNK_SIG "\x8D\x04\xB8\x83\xC7\xFF\x89\x46\x10"
-#define NETCHUNK_MSK "xxxxxxxxx"
+#define NETCHUNK_SIG_OFFSET 22
+#define NETCHUNK_SIG "\x8B\x0C\xB8\x8D\x04\xB8"
+#define NETCHUNK_MSK "xxxxxx"
 
 #define BEGIN_MEMEDIT( addr, size ) \
 { \

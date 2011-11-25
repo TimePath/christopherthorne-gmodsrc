@@ -26,7 +26,7 @@
 #include "gl_igameeventmanager2.h"
 #include "gl_igameevent.h"
 
-// Platform specific headers
+// Platform headers
 #ifdef WIN32
 #include <windows.h>
 #else
@@ -43,37 +43,7 @@ bool g_bPatchedNetChunk;
 
 // Multiple Lua state support
 luaStateList_t g_LuaStates;
-
 luaStateList_t *GetLuaStates( void ) { return &g_LuaStates; }
-
-#define ADD_LUA_STATE( L ) \
-{ \
-	UsesLua(); \
-	multiStateInfo msi; \
-	msi.L = L; \
-	ILuaObject *_G_hook = Lua()->GetGlobal( "hook" ); \
-	ILuaObject *_G_hook_Call = _G_hook->GetMember( "Call" ); \
-	_G_hook_Call->Push(); \
-	msi.ref_hook_Call = Lua()->GetReference( -1, true ); \
-	_G_hook_Call->UnReference(); \
-	_G_hook->UnReference(); \
-	g_LuaStates.AddToTail( msi ); \
-}
-
-#define REMOVE_LUA_STATE( L ) \
-{ \
-	UsesLua(); \
-	for ( int i = 0; i < g_LuaStates.Count(); i++ ) \
-	{ \
-		multiStateInfo msi = g_LuaStates[i]; \
-		if ( msi.L == L ) \
-		{ \
-			Lua()->FreeReference( msi.ref_hook_Call ); \
-			g_LuaStates.Remove( i ); \
-			break; \
-		} \
-	} \
-}
 
 // Interfaces
 CreateInterfaceFn fnEngineFactory = NULL;
@@ -84,9 +54,10 @@ IVEngineClient *g_pEngineClient = NULL;
 ICvar *g_pCVarClient = NULL;
 ICvar *g_pCVarServer = NULL;
 
-// Hooks
+// CSigScan wrapper
 #include "../simplescan/csimplescan.h"
 
+// CNetChan::ProcessMessages function pointer
 void *CNetChan_ProcessMessages_T = NULL;
 
 // Garbage collection
@@ -99,13 +70,36 @@ LUA_FUNCTION( std__gc )
 	return 0;
 }
 
+// Checks if the server is dedicated
+GLBL_FUNCTION( sourcenet_isDedicatedServer )
+{
+	UsesLua();
+
+	Lua()->Push( g_pEngineServer->IsDedicatedServer() );
+
+	return 1;
+}
+
 // Module load
 int Open( lua_State *L )
 {
 	UsesLua();
 
-	ADD_LUA_STATE( L );	
-
+	// State descriptor
+	multiStateInfo msi;
+	msi.L = L;
+	// hook.Call object
+	ILuaObject *_G_hook = Lua()->GetGlobal( "hook" );
+	ILuaObject *_G_hook_Call = _G_hook->GetMember( "Call" );
+	_G_hook_Call->Push();
+	// hook.Call reference
+	msi.ref_hook_Call = Lua()->GetReference( -1, true );
+	// Cleanup
+	_G_hook_Call->UnReference();
+	_G_hook->UnReference();
+	// Register state
+	g_LuaStates.AddToTail( msi );
+	
 	fnEngineFactory = Sys_GetFactory( ENGINE_LIB );
 
 	if ( !fnEngineFactory )
@@ -124,7 +118,7 @@ int Open( lua_State *L )
 		return 0;
 	}
 
-	if ( Lua()->IsClient() )
+	if ( Lua()->IsClient() || !g_pEngineServer->IsDedicatedServer() )
 	{
 		g_pEngineClient = (IVEngineClient *)fnEngineFactory( VENGINE_CLIENT_INTERFACE_VERSION, NULL );
 
@@ -146,7 +140,8 @@ int Open( lua_State *L )
 			return 0;
 		}
 	}
-	else
+	
+	if ( Lua()->IsServer() || !g_pEngineServer->IsDedicatedServer() )
 	{
 #ifdef _WIN32
 		g_pCVarServer = *(ICvar **)GetProcAddress( GetModuleHandle( SERVER_LIB ), "cvar" );
@@ -198,17 +193,6 @@ int Open( lua_State *L )
 	REG_GLBL_STRING( USER_INFO_TABLENAME );
 	REG_GLBL_STRING( SERVER_STARTUP_DATA_TABLENAME );
 
-	REG_GLBL_NUMBER( DELTA_OFFSET_BITS );
-	REG_GLBL_NUMBER( DELTA_OFFSET_MAX );
-
-	REG_GLBL_NUMBER( DELTASIZE_BITS );
-
-	REG_GLBL_NUMBER( NUM_NEW_COMMAND_BITS );
-	REG_GLBL_NUMBER( MAX_NEW_COMMANDS );
-
-	REG_GLBL_NUMBER( NUM_BACKUP_COMMAND_BITS );
-	REG_GLBL_NUMBER( MAX_BACKUP_COMMANDS );
-
 	REG_GLBL_NUMBER( NET_MESSAGE_BITS );
 
 	REG_GLBL_NUMBER( net_NOP );
@@ -245,6 +229,9 @@ int Open( lua_State *L )
 	REG_GLBL_NUMBER( svc_GameEventList );
 	REG_GLBL_NUMBER( svc_GetCvarValue );
 	REG_GLBL_NUMBER( svc_CmdKeyValues );
+#ifdef GMODBETA
+	REG_GLBL_NUMBER( svc_GMod_ServerToClient );
+#endif
 	REG_GLBL_NUMBER( SVC_LASTMSG );
 
 	REG_GLBL_NUMBER( clc_ClientInfo );
@@ -256,6 +243,9 @@ int Open( lua_State *L )
 	REG_GLBL_NUMBER( clc_FileCRCCheck );
 	REG_GLBL_NUMBER( clc_CmdKeyValues );
 	REG_GLBL_NUMBER( clc_FileMD5Check );
+#ifdef GMODBETA
+	REG_GLBL_NUMBER( clc_GMod_ClientToServer );
+#endif
 	REG_GLBL_NUMBER( CLC_LASTMSG );
 
 	REG_GLBL_NUMBER( RES_FATALIFMISSING );
@@ -355,6 +345,8 @@ int Open( lua_State *L )
 	REG_GLBL_FUNCTION( sn3_bf_read );
 
 	BEGIN_META_REGISTRATION( CNetChan );
+		REG_META_CALLBACK( CNetChan, __eq );
+
 		REG_META_FUNCTION( CNetChan, DumpMessages );
 
 		REG_META_FUNCTION( CNetChan, Reset );
@@ -586,6 +578,8 @@ int Open( lua_State *L )
 	REG_GLBL_FUNCTION( Attach__CNetChan_ProcessMessages );
 	REG_GLBL_FUNCTION( Detach__CNetChan_ProcessMessages );
 
+	REG_GLBL_FUNCTION( sourcenet_isDedicatedServer );
+
 	CSimpleScan engineScn( fnEngineFactory );
 
 	if ( !IS_ATTACHED( CNetChan_ProcessMessages ) )
@@ -640,7 +634,22 @@ int Close( lua_State *L )
 {
 	UsesLua();
 
-	REMOVE_LUA_STATE( L );
+	for ( int i = 0; i < g_LuaStates.Count(); i++ )
+	{
+		// State descriptor
+		multiStateInfo msi = g_LuaStates[i];
+
+		if ( msi.L == L )
+		{
+			// Free hook.Call reference
+			Lua()->FreeReference( msi.ref_hook_Call );
+			
+			// Unregister state
+			g_LuaStates.Remove( i );
+			
+			break;
+		}
+	}
 
 #ifdef _WIN32
 	if ( !Lua()->IsClient() )

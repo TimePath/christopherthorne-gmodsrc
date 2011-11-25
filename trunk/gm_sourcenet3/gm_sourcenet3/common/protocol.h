@@ -148,7 +148,12 @@ enum
 
 #define svc_CmdKeyValues	32	// Server submits KeyValues command for the client
 
-#define SVC_LASTMSG			32	// last known server messages
+#ifdef GMODBETA
+#define svc_GMod_ServerToClient 33
+#define SVC_LASTMSG			33	// last known server message
+#else
+#define SVC_LASTMSG			32	// last known server message
+#endif
 
 //
 // client to server
@@ -163,7 +168,12 @@ enum
 #define clc_FileCRCCheck		14		// client is sending a file's CRC to the server to be verified.
 #define clc_CmdKeyValues		16
 #define clc_FileMD5Check		17		// client is sending a file's MD5 to the server to be verified.
+#ifdef GMODBETA
+#define clc_GMod_ClientToServer 18
+#define CLC_LASTMSG	18
+#else
 #define CLC_LASTMSG			17		//	last known client message
+#endif
 
 #define RES_FATALIFMISSING	(1<<0)   // Disconnect if we can't get this file.
 #define RES_PRELOAD			(1<<1)  // Load on client rather than just reserving name

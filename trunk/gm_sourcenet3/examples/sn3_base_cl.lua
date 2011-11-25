@@ -4,6 +4,8 @@ MENU = LocalPlayer == nil
 
 NET_HOOKS = NET_HOOKS || { attach = {}, detach = {} }
 
+NET_ATTACHED = false
+
 function HookNetChannel( ... )
 	local args = { ... }
 
@@ -45,10 +47,13 @@ function HookNetChannel( ... )
 	end
 
 	local function AttachNetChannel( netchan )
+		if ( NET_ATTACHED ) then return false end
 		if ( !netchan ) then return false end
 
 		Attach__CNetChan_Shutdown( netchan )
 		
+		NET_ATTACHED = true
+
 		for k, v in pairs( NET_HOOKS.attach ) do
 			StandardNetHook( netchan, v )
 		end
@@ -57,10 +62,13 @@ function HookNetChannel( ... )
 	end
 
 	local function DetachNetChannel( netchan )
+		if ( !NET_ATTACHED ) then return false end
 		if ( !netchan ) then return false end
 
 		Detach__CNetChan_Shutdown( netchan )
 		
+		NET_ATTACHED = false
+
 		for k, v in pairs( NET_HOOKS.detach ) do
 			StandardNetHook( netchan, v )
 		end
@@ -71,26 +79,28 @@ function HookNetChannel( ... )
 	if ( !AttachNetChannel( CNetChan() ) ) then
 		hook.Add( "Think", "CreateNetChannel", function() -- Wait until channel is created
 			if ( CNetChan() ) then
-				AttachNetChannel( CNetChan() )
-
-				hook.Remove( "Think", "CreateNetChannel" )
+				if ( AttachNetChannel( CNetChan() ) ) then
+					hook.Remove( "Think", "CreateNetChannel" )
+				end
 			end
 		end )
 	end
 
 	hook.Add( "PreNetChannelShutdown", "DetachHooks", function( netchan, reason )
-		DetachNetChannel( netchan )
+		--print( "[gm_sourcenet3] PreNetChannelShutdown called, netchan=" .. tostring( netchan ) .. ", reason=" .. reason )
 
-		if ( MENU ) then
-			NET_HOOKS = NET_HOOKS || { attach = {}, detach = {} }
+		if ( DetachNetChannel( netchan ) ) then
+			if ( MENU ) then
+				NET_HOOKS = NET_HOOKS || { attach = {}, detach = {} }
 
-			hook.Add( "Think", "DestroyNetChannel", function() -- Ensure the current channel is destroyed before waiting for a new one
-				if ( !CNetChan() ) then
-					HookNetChannel( unpack( args ) )
-					
-					hook.Remove( "Think", "DestroyNetChannel" )
-				end
-			end )
+				hook.Add( "Think", "DestroyNetChannel", function() -- Ensure the current channel is destroyed before waiting for a new one
+					if ( !CNetChan() ) then
+						HookNetChannel( unpack( args ) )
+						
+						hook.Remove( "Think", "DestroyNetChannel" )
+					end
+				end )
+			end
 		end
 	end )
 end

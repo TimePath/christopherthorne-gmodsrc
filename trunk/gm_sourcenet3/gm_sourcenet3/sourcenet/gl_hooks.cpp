@@ -1,3 +1,6 @@
+// Required interfaces
+#define IVENGINESERVER_INTERFACE
+#define IVENGINECLIENT_INTERFACE
 #define ICVAR_INTERFACE
 
 #include "gl_hooks.h"
@@ -50,6 +53,16 @@ int VFUNC CNetChan_SendDatagram_H( CNetChan *netchan, sn3_bf_write *data )
 
 	BEGIN_MULTISTATE_HOOK( "PreSendDatagram" );
 		DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
+
+		if ( !g_pEngineServer->IsDedicatedServer() )
+		{
+			DO_MULTISTATE_HOOK( PUSH_META( g_pEngineClient->GetNetChannelInfo(), CNetChan ) );
+		}
+		else
+		{
+			DO_MULTISTATE_HOOK( Lua()->PushNil() );
+		}
+
 		DO_MULTISTATE_HOOK( PUSH_META( data, sn3_bf_write ) );
 		DO_MULTISTATE_HOOK( PUSH_META( &netchan->reliabledata, sn3_bf_write ) );
 		DO_MULTISTATE_HOOK( PUSH_META( &netchan->unreliabledata, sn3_bf_write ) );
@@ -274,9 +287,9 @@ bool CNetChan_ProcessMessages_H( CNetChan *netchan, sn3_bf_read &buf )
 		int bitsread = buf.GetNumBitsRead();
 
 		unsigned char data[96000];
-		memcpy( data, buf.m_pData, bitsread );
+		memcpy( data, buf.m_pData, BitByte( bitsread ) );
 
-		bf_write write( data, sizeof(data) );
+		bf_write write( data, sizeof( data ) );
 
 		BEGIN_MULTISTATE_HOOK( "PreProcessMessages" );
 			write.SeekToBit( bitsread );
@@ -284,6 +297,11 @@ bool CNetChan_ProcessMessages_H( CNetChan *netchan, sn3_bf_read &buf )
 			DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
 			DO_MULTISTATE_HOOK( PUSH_META( &buf, sn3_bf_read ) );
 			DO_MULTISTATE_HOOK( PUSH_META( &write, sn3_bf_write ) );
+
+			if ( !g_pEngineServer->IsDedicatedServer() )
+			{
+				DO_MULTISTATE_HOOK( PUSH_META( g_pEngineClient->GetNetChannelInfo(), CNetChan ) );
+			}
 
 			CALL_MULTISTATE_HOOK( 0 );
 
@@ -312,10 +330,10 @@ bool CNetChan_ProcessMessages_H( CNetChan *netchan, sn3_bf_read &buf )
 			return false;
 		}
 
-		if ( buf.GetNumBitsLeft() < 6 )
+		if ( buf.GetNumBitsLeft() < NET_MESSAGE_BITS )
 			break;
 
-		unsigned char msg = buf.ReadUBitLong( 6 );
+		unsigned char msg = buf.ReadUBitLong( NET_MESSAGE_BITS );
 
 		if ( msg <= net_LastControlMessage )
 		{

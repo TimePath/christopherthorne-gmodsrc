@@ -116,7 +116,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="./;common;sourcenet;engine;F:/Data/Misc/Valve/SDK/HL2GMOD/common;F:/Data/Misc/Valve/SDK/HL2GMOD/public;F:/Data/Misc/Valve/SDK/HL2GMOD/public/tier0;F:/Data/Misc/Valve/SDK/HL2GMOD/public/tier1;F:/Data/Misc/Valve/SDK/HL2GMOD/public/mathlib;F:/Data/Misc/Valve/SDK/HL2GMOD/public/engine;F:/Data/Misc/Valve/SDK/HL2GMOD/public;F:/Data/Misc/Valve/SDK/HL2GMOD/game_shared;F:/Data/Misc/Valve/SDK/HL2GMOD/dlls;F:/Data/Misc/Valve/SDK/HL2GMOD/game/client;F:/Data/Misc/Valve/SDK/HL2GMOD/game/server;F:/Data/Misc/Valve/SDK/HL2GMOD/game/shared;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GM_SOURCENET3_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GM_SOURCENET3_EXPORTS;GMOD"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"

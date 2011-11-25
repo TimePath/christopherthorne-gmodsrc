@@ -12,15 +12,52 @@ HookNetChannel(
 	{ name = "CNetChan::ProcessMessages", nochan = true }
 )
 
-hook.Add( "PreProcessMessages", "InFilter", function( netchan, read, write )
+local function CopyBufferEnd( dst, src )
+	local bitsleft = src:GetNumBitsLeft()
+	local data = src:ReadBits( bitsleft )
+	
+	dst:WriteBits( data, bitsleft )
+	data:Delete()
+end
+
+hook.Add( "PreProcessMessages", "InFilter", function( netchan, read, write, localchan )
+	local totalbits = read:GetNumBitsLeft() + read:GetNumBitsRead()
+
+	if ( !sourcenet_isDedicatedServer() ) then
+		if ( netchan == localchan ) then
+			if ( SERVER ) then CopyBufferEnd( write, read ) return end
+		else
+			if ( CLIENT ) then CopyBufferEnd( write, read )	return end
+		end
+	end
+
 	hook.Call( "BASE_PreProcessMessages", nil, netchan, read, write )
 
-	local totalbits = read:GetNumBitsLeft() + read:GetNumBitsRead()
+	local changeLevelState = false
 
 	while ( read:GetNumBitsLeft() >= NET_MESSAGE_BITS ) do
 		local msg = read:ReadUBitLong( NET_MESSAGE_BITS )
+
+		if ( CLIENT ) then
+			-- Hack to prevent changelevel crashes
+			if ( msg == net_SignonState ) then
+				local state = read:ReadByte()
+				
+				if ( state == SIGNONSTATE_CHANGELEVEL ) then
+					changeLevelState = true
+					--print( "[gm_sourcenet3] Received changelevel packet" )
+				end
+				
+				read:Seek( read:GetNumBitsRead() - 8 )
+			end
+		end
+
 		local handler = NET_MESSAGES[ msg ]
 
+		--[[if ( msg != net_NOP && msg != 3 && msg != 9 ) then
+			Msg( "(in) Pre Message: " .. msg .. ", bits: " .. read:GetNumBitsRead() .. "/" .. totalbits .. "\n" )
+		end--]]
+	
 		if ( !handler ) then
 			if ( CLIENT ) then
 				handler = NET_MESSAGES.SVC[ msg ]
@@ -45,6 +82,17 @@ hook.Add( "PreProcessMessages", "InFilter", function( netchan, read, write )
 			write:Seek( totalbits )
 
 			break
+		end
+
+		--[[if ( msg != net_NOP && msg != 3 && msg != 9 ) then
+			Msg( "(in) Post Message: " .. msg .. " bits: " .. read:GetNumBitsRead() .. "/" .. totalbits .. "\n" )
+		end--]]
+	end
+	
+	if ( CLIENT ) then
+		if ( changeLevelState ) then
+			--print( "[gm_sourcenet3] Server is changing level, calling PreNetChannelShutdown" )
+			hook.Call( "PreNetChannelShutdown", nil, netchan, "Server Changing Level" )
 		end
 	end
 end )

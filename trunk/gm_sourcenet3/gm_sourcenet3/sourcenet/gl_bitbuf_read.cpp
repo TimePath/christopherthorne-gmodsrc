@@ -114,7 +114,16 @@ META_FUNCTION( sn3_bf_read, ReadBits )
 
 	sn3_bf_read *buf = GET_META( 1, sn3_bf_read );
 
-	unsigned char *data = new unsigned char[ Lua()->GetInteger( 2 ) ];
+	unsigned char *data = new unsigned char[ BitByte( Lua()->GetInteger( 2 ) ) ];
+
+	if ( !data )
+	{
+		Lua()->Msg( "[gm_sourcenet3][sn3_bf_read::ReadBits] Failed allocating %i bytes\n", BitByte( Lua()->GetInteger( 2 ) ) );
+		Lua()->Error( "[gm_sourcenet3][sn3_bf_read::ReadBits] Fatal error" );
+
+		// Prevent further reading of the buffer
+		buf->SetOverflowFlag();
+	}
 
 	buf->ReadBits( data, Lua()->GetInteger( 2 ) );
 
@@ -167,6 +176,15 @@ META_FUNCTION( sn3_bf_read, ReadBytes )
 	sn3_bf_read *buf = GET_META( 1, sn3_bf_read );
 
 	unsigned char *data = new unsigned char[ Lua()->GetInteger( 2 ) ];
+
+	if ( !data )
+	{
+		Lua()->Msg( "[gm_sourcenet3][sn3_bf_read::ReadBytes] Failed allocating %i bytes\n", Lua()->GetInteger( 2 ) );
+		Lua()->Error( "[gm_sourcenet3][sn3_bf_read::ReadBytes] Fatal error" );
+
+		// Prevent further reading of the buffer
+		buf->SetOverflowFlag();
+	}
 
 	buf->ReadBytes( data, Lua()->GetInteger( 2 ) );
 

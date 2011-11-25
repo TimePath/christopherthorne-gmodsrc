@@ -1,13 +1,34 @@
 require( "sourcenet3" )
 
-function debugprint( ... )
-	--print( ... )
-end
+-- Debug ConVar
+local sourcenet_netmessage_info = CreateConVar( "sourcenet_netmessage_info", "0" )
 
+-- Engine definitions
+NET_MESSAGE_BITS = 6
+NUM_NEW_COMMAND_BITS = 4
+NUM_BACKUP_COMMAND_BITS = 3
 MAX_TABLES = 32
+MAX_USERMESSAGE_BITS = 11
+MAX_ENTITYMESSAGE_BITS = 11
+MAX_SERVER_CLASS_BITS = 9
+--[[BETA
+MAX_EDICT_BITS = 15
+MAX_TEMPENTITIES_BITS = 18
+MAX_STRINGTABLE_BITS = 21
+--]]
+MAX_EDICT_BITS = 11
+MAX_TEMPENTITIES_BITS = 17
+MAX_STRINGTABLE_BITS = 20
 
 function math.log2( val )
 	return math.log( val ) / math.log( 2 )
+end
+
+function SourceNetMsg( ... )
+	if ( sourcenet_netmessage_info:GetInt() != 0 ) then
+		Msg( "[snmi] " .. ... )
+		--print( "[snmi] " .. ... )
+	end
 end
 
 NET_MESSAGES = {
@@ -24,7 +45,7 @@ NET_MESSAGES = {
 			local reason = read:ReadString()
 			write:WriteString( reason )
 			
-			debugprint( "net_Disconnect", reason )
+			SourceNetMsg( string.format( "net_Disconnect %s\n", reason ) )
 		end
 	},
 	
@@ -41,7 +62,7 @@ NET_MESSAGES = {
 			local requested = read:ReadOneBit()
 			write:WriteOneBit( requested )
 			
-			debugprint( "net_File", transferid, filename, ( requested == 1 ) )
+			SourceNetMsg( string.format( "net_File %i,%s,%i\n", transferid, filename, requested ) )
 		end
 	},
 
@@ -58,7 +79,7 @@ NET_MESSAGES = {
 			local unk2 = read:ReadUBitLong( 16 ) -- 18h
 			write:WriteUBitLong( unk2, 16 )
 			
-			debugprint( "net_Tick", tick, unk1, unk2 )
+			SourceNetMsg( string.format( "net_Tick %i,%i,%i\n", tick, unk1, unk2 ) )
 		end
 	},
 	
@@ -69,8 +90,8 @@ NET_MESSAGES = {
 			local cmd = read:ReadString()
 			write:WriteString( cmd )
 			
-			debugprint( "net_StringCmd", cmd )
-		end		
+			SourceNetMsg( string.format( "net_StringCmd %s\n", cmd ) )
+		end
 	},
 
 	[ net_SetConVar ] = { -- 5
@@ -87,7 +108,7 @@ NET_MESSAGES = {
 				local cvarvalue = read:ReadString()
 				write:WriteString( cvarvalue )
 					
-				debugprint( "net_SetConVar", cvarname, "=", cvarvalue )
+				SourceNetMsg( string.format( "net_SetConVar %s=%s\n", cvarname, cvarvalue ) )
 			end
 		end
 	},
@@ -98,11 +119,11 @@ NET_MESSAGES = {
 			
 			local state = read:ReadByte()
 			write:WriteByte( state )
-			
+
 			local servercount = read:ReadLong()
 			write:WriteLong( servercount )
 			
-			debugprint( "net_SignonState", state, servercount )
+			SourceNetMsg( string.format( "net_SignonState %i,%i\n", state, servercount ) )
 		end
 	},
 
@@ -137,7 +158,7 @@ NET_MESSAGES = {
 
 						write:WriteUBitLong( fileCRC, 32 )
 						
-						debugprint( "\t> customization file " .. i .. " = " .. fileCRC )
+						SourceNetMsg( "clc_ClientInfo \t> customization file " .. i .. " = " .. fileCRC .. "\n" )
 					else
 						fileCRC = 0
 					end
@@ -146,7 +167,7 @@ NET_MESSAGES = {
 				local unk = read:ReadOneBit() -- 19h, probably replay related
 				write:WriteOneBit( unk )
 				
-				debugprint( "clc_ClientInfo", spawncount, sendTableCRC, ishltv == 1, friendsID, guid, unk )
+				SourceNetMsg( string.format( "clc_ClientInfo %i,%i,%i,%i,%s,%i\n", spawncount, sendTableCRC, ishltv, friendsID, guid, unk ) )
 			end
 		},
 		
@@ -154,11 +175,11 @@ NET_MESSAGES = {
 			DefaultCopy = function( netchan, read, write )
 				write:WriteUBitLong( clc_Move, NET_MESSAGE_BITS )
 
-				local new = read:ReadUBitLong( 4 )
-				write:WriteUBitLong( new, 4 )
+				local new = read:ReadUBitLong( NUM_NEW_COMMAND_BITS )
+				write:WriteUBitLong( new, NUM_NEW_COMMAND_BITS )
 
-				local backup = read:ReadUBitLong( 3 )
-				write:WriteUBitLong( backup, 3 )
+				local backup = read:ReadUBitLong( NUM_BACKUP_COMMAND_BITS )
+				write:WriteUBitLong( backup, NUM_BACKUP_COMMAND_BITS )
 
 				local bits = read:ReadWord() 				
 				write:WriteWord( bits )
@@ -167,7 +188,7 @@ NET_MESSAGES = {
 				write:WriteBits( data, bits )
 				data:Delete()
 				
-				debugprint( "clc_Move", new, backup, bits )
+				SourceNetMsg( string.format( "clc_Move %i,%i,%i\n", new, backup, bits ) )
 			end
 		},
 		
@@ -182,7 +203,7 @@ NET_MESSAGES = {
 				write:WriteBits( data, bits )
 				data:Delete()
 				
-				debugprint( "clc_VoiceData", bits )
+				SourceNetMsg( string.format( "clc_VoiceData %i\n", bits ) )
 			end
 		},
 		
@@ -196,20 +217,20 @@ NET_MESSAGES = {
 				local unk2 = read:ReadUBitLong( 1 ) -- 14h
 				write:WriteUBitLong( unk2, 1 )
 				
-				debugprint( "clc_BaselineAck", tick, unk2 )
+				SourceNetMsg( string.format( "clc_BaselineAck %i,%i\n", tick, unk2 ) )
 			end
 		},
 		
 		[ clc_ListenEvents ] = { -- 12
 			DefaultCopy = function( netchan, read, write )
 				write:WriteUBitLong( clc_ListenEvents, NET_MESSAGE_BITS )
-				
-				debugprint( "clc_ListenEvents" )
 
 				for i = 1, 16 do
 					local unk1 = read:ReadUBitLong( 32 )
 					write:WriteUBitLong( unk1, 32 )
 				end
+				
+				SourceNetMsg( string.format( "clc_ListenEvents\n" ) )
 			end
 		},
 		
@@ -229,7 +250,7 @@ NET_MESSAGES = {
 				local cvarvalue = read:ReadString() -- 18h
 				write:WriteString( cvarvalue )
 				
-				debugprint( "clc_RespondCvarValue", cookie, status, cvarname, cvarvalue )
+				SourceNetMsg( string.format( "clc_RespondCvarValue %i,%i,%s,%s\n", cookie, status, cvarname, cvarvalue ) )
 			end
 		},
 		
@@ -259,7 +280,7 @@ NET_MESSAGES = {
 				local unk6 = read:ReadUBitLong( 32 )
 				write:WriteUBitLong( unk6, 32 )
 	
-				debugprint( "FileCRCCheck", unk1, gamepath, unk3, unk4, filename, unk6 )
+				SourceNetMsg( string.format( "clc_FileCRCCheck %i,%s,%s,%i,%s,%i", unk1, gamepath, unk3, unk4, filename, unk6 ) )
 			end
 		},
 		
@@ -274,7 +295,7 @@ NET_MESSAGES = {
 				write:WriteBits( keyvalues, length * 8 )
 				keyvalues:Delete()
 				
-				debugprint( "clc_CmdKeyValues", length )
+				SourceNetMsg( string.format( "clc_CmdKeyValues %i\n", length ) )
 			end
 		},
 	
@@ -304,9 +325,29 @@ NET_MESSAGES = {
 				local unk6 = read:ReadUBitLong( 32 )
 				write:WriteUBitLong( unk6, 32 )
 				
-				debugprint( "FileMD5Check", unk1, gamepath, unk3, unk4, filename, unk6 )
+				SourceNetMsg( string.format( "clc_FileMD5Check %i,%s,%s,%i,%s,%i", unk1, gamepath, unk3, unk4, filename, unk6 ) )
 			end			
 		},
+		
+		--[[BETA
+		[ clc_GMod_ClientToServer ] = { -- 18
+			DefaultCopy = function( netchan, read, write )
+				write:WriteUBitLong( clc_GMod_ClientToServer, NET_MESSAGE_BITS )
+				
+				local bits = read:ReadLong()
+				write:WriteLong( bits )
+			
+				local id = read:ReadShort()
+				write:WriteShort( id )
+				
+				local data = read:ReadBits( bits - 16 )
+				write:WriteBits( data, bits - 16 )
+				data:Delete()
+
+				SourceNetMsg( string.format( "clc_GMod_ClientToServer length=%i,id=%i/%s\n", bits, id, util.NetworkIDToString( id ) ) )
+			end		
+		},
+		--]]
 	},
 
 	SVC = {
@@ -317,7 +358,7 @@ NET_MESSAGES = {
 				local str = read:ReadString()
 				write:WriteString( str )
 				
-				debugprint( "svc_Print [" .. str .. "]" )
+				SourceNetMsg( string.format( "svc_Print %s\n", str ) )
 			end
 		},
 		
@@ -400,7 +441,7 @@ NET_MESSAGES = {
 				local unk = read:ReadOneBit()
 				write:WriteOneBit( unk )
 				
-				debugprint( "svc_ServerInfo", hostname, unk )
+				SourceNetMsg( string.format( "svc_ServerInfo %s\n", hostname ) )
 			end
 		},
 		
@@ -413,12 +454,12 @@ NET_MESSAGES = {
 				
 				local bits = read:ReadShort() --14
 				write:WriteShort( bits )
-				
+
 				local data = read:ReadBits( bits )
 				write:WriteBits( data, bits )
 				data:Delete()
 				
-				debugprint( "svc_SendTable", ( encoded == 1 ), bits )
+				SourceNetMsg( string.format( "svc_SendTable %i,%i\n", encoded, bits ) )
 			end
 		},
 
@@ -443,11 +484,11 @@ NET_MESSAGES = {
 						local unk5 = read:ReadString()
 						write:WriteString( unk5 )
 						
-						debugprint( "Full update", unk3, unk4, unk5 )
+						SourceNetMsg( string.format( "svc_ClassInfo full update,%i,%i,%i\n", unk3, unk4, unk5 ) )
 					end
 				end
 				
-				debugprint( "svc_ClassInfo", numclasses, useclientclasses )
+				SourceNetMsg( string.format( "svc_ClassInfo %i,%i\n", numclasses, useclientclasses ) )
 			end
 		},
 		
@@ -458,7 +499,7 @@ NET_MESSAGES = {
 				local state = read:ReadOneBit()
 				write:WriteOneBit( state )
 				
-				debugprint( "svc_SetPause", ( state == 1 ) )
+				SourceNetMsg( string.format( "svc_SetPause %i\n", state ) )
 			end
 		},
 		
@@ -475,8 +516,8 @@ NET_MESSAGES = {
 				local entries = read:ReadUBitLong( math.log2( maxentries ) + 1 )
 				write:WriteUBitLong( entries, math.log2( maxentries ) + 1 )
 
-				local bits = read:ReadUBitLong( 20 )
-				write:WriteUBitLong( bits, 20 )
+				local bits = read:ReadUBitLong( MAX_STRINGTABLE_BITS )
+				write:WriteUBitLong( bits, MAX_STRINGTABLE_BITS )
 
 				local userdata = read:ReadOneBit()
 				write:WriteOneBit( userdata )
@@ -496,7 +537,7 @@ NET_MESSAGES = {
 				write:WriteBits( data, bits )
 				data:Delete()
 				
-				debugprint( "svc_CreateStringTable", tablename )
+				SourceNetMsg( string.format( "svc_CreateStringTable %s\n", tablename ) )
 			end
 		},
 
@@ -526,7 +567,7 @@ NET_MESSAGES = {
 				write:WriteBits( data, bits )
 				data:Delete()
 
-				debugprint( "svc_UpdateStringTable", "table="..tableid..",", ( unk2 == 1 ), "changed="..changed..",", bits )
+				SourceNetMsg( string.format( "svc_UpdateStringTable tableid=%i,unk2=%i,changed=%i,bits=%i\n", tableid, unk2, changed, bits ) )
 			end
 		},
 
@@ -540,7 +581,7 @@ NET_MESSAGES = {
 				local quality = read:ReadByte()
 				write:WriteByte( quality )
 				
-				debugprint( "svc_VoiceInit", codec, quality )
+				SourceNetMsg( string.format( "svc_VoiceInit codec=%s,quality=%i\n", codec, quality ) )
 			end
 		},
 
@@ -561,7 +602,7 @@ NET_MESSAGES = {
 				write:WriteBits( voicedata, bits )
 				voicedata:Delete()
 				
-				debugprint( "svc_VoiceData", client, proximity, bits )
+				SourceNetMsg( string.format( "svc_VoiceData client=%i,proximity=%i,bits=%i\n", client, proximity, bits ) )
 			end
 		},
 
@@ -592,7 +633,7 @@ NET_MESSAGES = {
 				write:WriteBits( data, bits ) -- Check out SoundInfo_t::ReadDelta if you want to read this	
 				data:Delete()
 
-				debugprint( "svc_Sounds", ( reliable == 1 ), num, bits )
+				SourceNetMsg( string.format( "svc_Sounds reliable=%i,num=%i,bits=%i\n", reliable, num, bits ) )
 			end
 		},
 		
@@ -600,10 +641,10 @@ NET_MESSAGES = {
 			DefaultCopy = function( netchan, read, write )
 				write:WriteUBitLong( svc_SetView, NET_MESSAGE_BITS )
 				
-				local viewent = read:ReadUBitLong( 11 )
-				write:WriteUBitLong( viewent, 11 )
+				local viewent = read:ReadUBitLong( MAX_EDICT_BITS )
+				write:WriteUBitLong( viewent, MAX_EDICT_BITS )
 				
-				debugprint( "svc_SetView", viewent )
+				SourceNetMsg( string.format( "svc_SetView viewent=%i\n", viewent ) )
 			end
 		},
 
@@ -623,7 +664,7 @@ NET_MESSAGES = {
 				local z = read:ReadBitAngle( 16 )
 				write:WriteBitAngle( z, 16 )
 				
-				debugprint( "svc_FixAngle", ( relative == 1 ), x, y, z )
+				SourceNetMsg( string.format( "svc_FixAngle relative=%i,x=%i,y=%i,z=%i\n", relative, x, y, z ) )
 			end
 		},
 
@@ -640,7 +681,7 @@ NET_MESSAGES = {
 				local r = read:ReadBitAngle( 16 )
 				write:WriteBitAngle( r, 16 )
 				
-				debugprint( "svc_CrosshairAngle", p, y, r )
+				SourceNetMsg( string.format( "svc_CrosshairAngle p=%i,y=%i,r=%i\n", p, y, r ) )
 			end
 		},
 
@@ -661,8 +702,8 @@ NET_MESSAGES = {
 				local modulation -- 24h
 
 				if ( useentity == 1 ) then
-					ent = read:ReadUBitLong( 11 ) 
-					write:WriteUBitLong( ent, 11 )
+					ent = read:ReadUBitLong( MAX_EDICT_BITS ) 
+					write:WriteUBitLong( ent, MAX_EDICT_BITS )
 
 					modulation = read:ReadUBitLong( 12 ) -- In engine build 4421 -> 4426 this changed from 11 to 12 bits
 					write:WriteUBitLong( modulation, 12 )
@@ -674,7 +715,7 @@ NET_MESSAGES = {
 				local lowpriority = read:ReadOneBit() -- "Replaceable", 28h
 				write:WriteOneBit( lowpriority )
 
-				debugprint( string.format( "svc_BSPDecal %s, %d, %d, %d, %d, %d", tostring( pos ), texture, useentity, ent, modulation, lowpriority ) )
+				SourceNetMsg( string.format( "svc_BSPDecal %s, %d, %d, %d, %d, %d\n", tostring( pos ), texture, useentity, ent, modulation, lowpriority ) )
 			end
 		},
 
@@ -685,14 +726,14 @@ NET_MESSAGES = {
 				local msgtype = read:ReadByte() -- 10h
 				write:WriteByte( msgtype )
 
-				local bits = read:ReadUBitLong( 11 ) -- 14h
-				write:WriteUBitLong( bits, 11 )
+				local bits = read:ReadUBitLong( MAX_USERMESSAGE_BITS ) -- 14h
+				write:WriteUBitLong( bits, MAX_USERMESSAGE_BITS )
 
 				local data = read:ReadBits( bits )
 				write:WriteBits( data, bits )
 				data:Delete()
 
-				debugprint( "svc_UserMessage", msgtype, bits )
+				SourceNetMsg( string.format( "svc_UserMessage msgtype=%i,bits=%i\n", msgtype, bits ) )
 			end
 		},
 		
@@ -700,20 +741,20 @@ NET_MESSAGES = {
 			DefaultCopy = function( netchan, read, write )
 				write:WriteUBitLong( svc_EntityMessage, NET_MESSAGE_BITS )
 				
-				local entity = read:ReadUBitLong( 11 )
-				write:WriteUBitLong( entity, 11 )
+				local entity = read:ReadUBitLong( MAX_EDICT_BITS )
+				write:WriteUBitLong( entity, MAX_EDICT_BITS )
 
-				local class = read:ReadUBitLong( 9 )
-				write:WriteUBitLong( class, 9 )
+				local class = read:ReadUBitLong( MAX_SERVER_CLASS_BITS )
+				write:WriteUBitLong( class, MAX_SERVER_CLASS_BITS )
 
-				local bits = read:ReadUBitLong( 11 )
-				write:WriteUBitLong( bits, 11 )
+				local bits = read:ReadUBitLong( MAX_ENTITYMESSAGE_BITS )
+				write:WriteUBitLong( bits, MAX_ENTITYMESSAGE_BITS )
 				
 				local data = read:ReadBits( bits )
 				write:WriteBits( data, bits )
 				data:Delete()
 				
-				debugprint( "svc_EntityMessage", entity, class, bits )
+				SourceNetMsg( string.format( "svc_EntityMessage entity=%i,class=%i,bits=%i\n", entity, class, bits ) )
 			end
 		},
 
@@ -728,7 +769,7 @@ NET_MESSAGES = {
 				write:WriteBits( data, bits )
 				data:Delete()
 				
-				debugprint( "svc_GameEvent", bits )
+				SourceNetMsg( string.format( "svc_GameEvent bits=%i\n", bits ) )
 			end
 		},
 		
@@ -736,8 +777,8 @@ NET_MESSAGES = {
 			DefaultCopy = function( netchan, read, write )
 				write:WriteUBitLong( svc_PacketEntities, NET_MESSAGE_BITS )
 				
-				local max = read:ReadUBitLong( 11 )
-				write:WriteUBitLong( max, 11 )
+				local max = read:ReadUBitLong( MAX_EDICT_BITS )
+				write:WriteUBitLong( max, MAX_EDICT_BITS )
 				
 				local unk2 = read:ReadOneBit()
 				write:WriteOneBit( unk2 )
@@ -752,8 +793,8 @@ NET_MESSAGES = {
 				local unk4 = read:ReadUBitLong( 1 )
 				write:WriteUBitLong( unk4, 1 )
 
-				local changed = read:ReadUBitLong( 11 )
-				write:WriteUBitLong( changed, 11 )
+				local changed = read:ReadUBitLong( MAX_EDICT_BITS )
+				write:WriteUBitLong( changed, MAX_EDICT_BITS )
 
 				local bits = read:ReadUBitLong( 20 )
 				write:WriteUBitLong( bits, 20 )
@@ -765,7 +806,7 @@ NET_MESSAGES = {
 				write:WriteBits( unk8, bits )
 				unk8:Delete()
 				
-				debugprint( "svc_PacketEntities", max, unk2, delta, unk4, changed, bits, unk7 )
+				SourceNetMsg( string.format( "svc_PacketEntities %i,%i,%i,%i,%i,%i,%i\n", max, unk2, delta, unk4, changed, bits, unk7 ) )
 			end
 		},
 		
@@ -775,15 +816,15 @@ NET_MESSAGES = {
 				
 				local num = read:ReadUBitLong( 8 ) -- 10h
 				write:WriteUBitLong( num, 8 )
-				
-				local bits = read:ReadUBitLong( 17 ) -- 14h
-				write:WriteUBitLong( bits, 17 )
+
+				local bits = read:ReadUBitLong( MAX_TEMPENTITIES_BITS ) -- 14h
+				write:WriteUBitLong( bits, MAX_TEMPENTITIES_BITS )
 				
 				local data = read:ReadBits( bits )
 				write:WriteBits( data, bits )
 				data:Delete()
 				
-				debugprint( "svc_TempEntities", num, bits, data )
+				SourceNetMsg( string.format( "svc_TempEntities %i,%i\n", num, bits ) )
 			end
 		},
 		
@@ -794,7 +835,7 @@ NET_MESSAGES = {
 				local index = read:ReadUBitLong( 13 )
 				write:WriteUBitLong( index, 13 )
 				
-				debugprint( "svc_Prefetch", index )
+				SourceNetMsg( string.format( "svc_Prefetch index=%i\n", index ) )
 			end
 		},
 		
@@ -812,7 +853,7 @@ NET_MESSAGES = {
 				write:WriteBytes( data, bytes )
 				data:Delete()
 				
-				debugprint( "svc_Menu", menutype, bytes )
+				SourceNetMsg( string.format( "svc_Menu menutype=%i,bytes=%i\n", menutype, bytes ) )
 			end
 		},
 		
@@ -830,7 +871,7 @@ NET_MESSAGES = {
 				write:WriteBits( data, bits )
 				data:Delete()
 				
-				debugprint( "svc_GameEventList", num, bits )
+				SourceNetMsg( string.format( "svc_GameEventList num=%i,bits=%i\n", num, bits ) )
 			end
 		},
 		
@@ -844,7 +885,7 @@ NET_MESSAGES = {
 				local cvarname = read:ReadString()
 				write:WriteString( cvarname )
 				
-				debugprint( "svc_GetCvarValue", cvarname )
+				SourceNetMsg( string.format( "svc_GetCvarValue cvarname=%s\n", cvarname ) )
 			end
 		},
 		
@@ -859,8 +900,28 @@ NET_MESSAGES = {
 				write:WriteBits( keyvalues, length * 8 )
 				keyvalues:Delete()
 				
-				debugprint( "svc_CmdKeyValues", length )
+				SourceNetMsg( string.format( "svc_CmdKeyValues length=%i\n", length ) )
 			end
 		},
+		
+		--[[BETA
+		[ svc_GMod_ServerToClient ] = { -- 33
+			DefaultCopy = function( netchan, read, write )
+				write:WriteUBitLong( svc_GMod_ServerToClient, NET_MESSAGE_BITS )
+				
+				local bits = read:ReadLong()
+				write:WriteLong( bits )
+			
+				local id = read:ReadShort()
+				write:WriteShort( id )
+				
+				local data = read:ReadBits( bits - 16 )
+				write:WriteBits( data, bits - 16 )
+				data:Delete()
+
+				SourceNetMsg( string.format( "svc_GMod_ServerToClient length=%i,id=%i/%s\n", bits, id, util.NetworkIDToString( id ) ) )
+			end		
+		},
+		--]]
 	}
 }
