@@ -77,6 +77,8 @@ EXT_META_FUNCTION( CNetChan, SetCompressionMode );
 EXT_META_FUNCTION( CNetChan, GetMaxRoutablePayloadSize );
 EXT_META_FUNCTION( CNetChan, SetMaxRoutablePayloadSize );
 
+EXT_META_FUNCTION( CNetChan, __eq );
+
 EXT_GLBL_FUNCTION( CNetChan );
 
 #endif // GL_CNETCHAN_H

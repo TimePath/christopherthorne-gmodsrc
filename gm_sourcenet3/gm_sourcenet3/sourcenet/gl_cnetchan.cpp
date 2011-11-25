@@ -835,6 +835,18 @@ META_FUNCTION( CNetChan, SetMaxRoutablePayloadSize )
 	return 0;
 }
 
+META_FUNCTION( CNetChan, __eq )
+{
+	UsesLua();
+
+	CNetChan *netchan1 = (CNetChan *)Lua()->GetUserData( 1 );
+	CNetChan *netchan2 = (CNetChan *)Lua()->GetUserData( 2 );
+
+	Lua()->Push( netchan1 == netchan2 );
+
+	return 1;
+}
+
 GLBL_FUNCTION( CNetChan )
 {
 	UsesLua();
