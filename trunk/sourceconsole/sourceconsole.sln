@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sourceconsole", "sourceconsole\sourceconsole.vcproj", "{A5E7E45E-B9D3-4EAF-A114-A731CE8680FB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sourceconsole_bridge", "sourceconsole_bridge\sourceconsole_bridge.vcproj", "{DC7ABCD3-4E27-40D1-9CBC-D3618CE42C04}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A5E7E45E-B9D3-4EAF-A114-A731CE8680FB}.Debug|Win32.ActiveCfg = Release|Win32
+		{A5E7E45E-B9D3-4EAF-A114-A731CE8680FB}.Debug|Win32.Build.0 = Release|Win32
+		{A5E7E45E-B9D3-4EAF-A114-A731CE8680FB}.Release|Win32.ActiveCfg = Release|Win32
+		{A5E7E45E-B9D3-4EAF-A114-A731CE8680FB}.Release|Win32.Build.0 = Release|Win32
+		{DC7ABCD3-4E27-40D1-9CBC-D3618CE42C04}.Debug|Win32.ActiveCfg = Release|Win32
+		{DC7ABCD3-4E27-40D1-9CBC-D3618CE42C04}.Debug|Win32.Build.0 = Release|Win32
+		{DC7ABCD3-4E27-40D1-9CBC-D3618CE42C04}.Release|Win32.ActiveCfg = Release|Win32
+		{DC7ABCD3-4E27-40D1-9CBC-D3618CE42C04}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
