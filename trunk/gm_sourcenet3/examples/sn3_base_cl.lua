@@ -89,7 +89,9 @@ function HookNetChannel( ... )
 	hook.Add( "PreNetChannelShutdown", "DetachHooks", function( netchan, reason )
 		--print( "[gm_sourcenet3] PreNetChannelShutdown called, netchan=" .. tostring( netchan ) .. ", reason=" .. reason )
 
-		if ( DetachNetChannel( netchan ) ) then
+		DetachNetChannel( netchan )
+
+		--[[if ( DetachNetChannel( netchan ) ) then
 			if ( MENU ) then
 				NET_HOOKS = NET_HOOKS || { attach = {}, detach = {} }
 
@@ -101,6 +103,6 @@ function HookNetChannel( ... )
 					end
 				end )
 			end
-		end
+		end--]]
 	end )
 end
