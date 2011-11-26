@@ -1,6 +1,6 @@
 require( "sourcenet3" )
 
-NET_CHANNEL_INDICES = {}
+NET_CHANNEL_INDICES = NET_CHANNEL_INDICES || {}
 NET_HOOKS = NET_HOOKS || { attach = {}, detach = {} }
 
 local function StandardNetHook( netchan, nethook )
@@ -75,8 +75,10 @@ function HookNetChannel( ... )
 				
 				attached = true
 			end
-
-			table.insert( NET_CHANNEL_INDICES, i )
+			
+			if ( !table.HasValue( NET_CHANNEL_INDICES, i ) ) then
+				table.insert( NET_CHANNEL_INDICES, i )
+			end
 		end
 	end
 
