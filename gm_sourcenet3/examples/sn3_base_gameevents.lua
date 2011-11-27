@@ -1,5 +1,8 @@
-include( "sn3_base_incoming.lua" )
-include( "sn3_base_outgoing.lua" )
+if ( CLIENT ) then
+	include( "sn3_base_incoming.lua" )
+else
+	include( "sn3_base_outgoing.lua" )
+end
 
 local function FilterGameEvent( netchan, read, write, hookname )
 	local bits = read:ReadUBitLong( 11 )
