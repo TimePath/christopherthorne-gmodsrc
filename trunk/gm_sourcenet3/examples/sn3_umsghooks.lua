@@ -1,13 +1,15 @@
 include( "sn3_base_incoming.lua" )
 
+LUASTRINGS_TABLE_NAME = "pfhremThHuasw"
+
 function ReadUserMessageString( buf )
 	if ( buf:ReadOneBit() == 1 ) then
 		local container = INetworkStringTableContainer()
 		
 		if ( !container ) then return end
 		
-		local pool = container:FindTable( "LuaStrings" )
-			
+		local pool = container:FindTable( LUASTRINGS_TABLE_NAME )
+
 		if ( !pool ) then return end
 
 		local str = pool:GetString( buf:ReadShort() )
