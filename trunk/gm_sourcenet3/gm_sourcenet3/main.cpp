@@ -26,20 +26,46 @@
 #include "gl_igameeventmanager2.h"
 #include "gl_igameevent.h"
 
-// Platform headers
-#ifdef WIN32
-#include <windows.h>
-#else
+// Platform definitions
+
+#ifdef _WIN32
+
+#define ENGINE_LIB "engine.dll"
+#define CLIENT_LIB "client.dll"
+#define SERVER_LIB "server.dll"
+
+#define CNetChan_ProcessMessages_SIG "\x83\xEC\x34\x53\x55\x89\x4C\x24\x08\x56\xB9"
+#define CNetChan_ProcessMessages_MSK "xx?xxxx??xx"
+
+#define NETPATCH_LEN 6
+#define NETPATCH_OLD "\x0F\x84\xC0\x00\x00\x00"
+#define NETPATCH_NEW "\xE9\xC1\x00\x00\x00\x90"
+#define NETCHUNK_SIG_OFFSET 21
+#define NETCHUNK_SIG "\x87\x13\x8D\x04\xB8\x83\xC7\xFF"
+#define NETCHUNK_MSK "xxxxxxxx"
+
+#elif defined _LINUX
+
 #include "memutils.h"
+
+#define ENGINE_LIB "engine.so"
+#define CLIENT_LIB NULL
+#define SERVER_LIB "server.so"
+
+#define NETPATCH_LEN 6
+#define NETPATCH_OLD "\x0F\x85\xC9\x00\x00\x00"
+#define NETPATCH_NEW "\xE9\x01\x00\x00\x00\90"
+#define NETCHUNK_SIG_OFFSET 8
+#define NETCHUNK_SIG "\x85\xFF\x8D\x04\x91\x89\x46\x10"
+#define NETCHUNK_MSK "xxxxxxxx"
+
 #endif
 
 // Entry points
 GMOD_MODULE( Open, Close );
 
 // Enable/disable SendDatagram hooking
-#ifdef _WIN32
 bool g_bPatchedNetChunk;
-#endif
 
 // Multiple Lua state support
 luaStateList_t g_LuaStates;
@@ -601,10 +627,11 @@ int Open( lua_State *L )
 			Msg( "[gm_sourcenet3] Failed to locate CNetChan::ProcessMessages, report this!\n" );
 		}
 	}
-
-#ifdef _WIN32
+	
 	if ( !Lua()->IsClient() )
 	{
+		// Disables per-client threads (hacky fix for SendDatagram hooking)
+
 		unsigned int ulNetThreadChunk;
 		
 		if ( engineScn.Find( NETCHUNK_SIG, NETCHUNK_MSK, (void **)&ulNetThreadChunk) )
@@ -624,7 +651,6 @@ int Open( lua_State *L )
 			g_bPatchedNetChunk = false;
 		}
 	}
-#endif
 
 	return 0;
 }
@@ -651,7 +677,6 @@ int Close( lua_State *L )
 		}
 	}
 
-#ifdef _WIN32
 	if ( !Lua()->IsClient() )
 	{
 		if ( g_bPatchedNetChunk )
@@ -670,7 +695,6 @@ int Close( lua_State *L )
 			}
 		}
 	}
-#endif
 
 	return 0;
 }

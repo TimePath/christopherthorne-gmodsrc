@@ -4,9 +4,7 @@
 #include "GMLuaModule.h"
 
 // Enable/disable SendDatagram hooking
-#ifdef _WIN32
 extern bool g_bPatchedNetChunk;
-#endif
 
 // Utility macros
 
@@ -184,22 +182,9 @@ extern ICvar *g_pCVarServer;
 
 #ifdef _WIN32
 
-#define ENGINE_LIB "engine.dll"
-#define CLIENT_LIB "client.dll"
-#define SERVER_LIB "server.dll"
-
-#define CNetChan_ProcessMessages_SIG "\x83\xEC\x34\x53\x55\x89\x4C\x24\x08\x56\xB9"
-#define CNetChan_ProcessMessages_MSK "xx?xxxx??xx"
-
-// Net chunk patch
-// Disables per-client threads (hacky fix for SendDatagram hooking)
-
-#define NETPATCH_LEN 6
-#define NETPATCH_OLD "\x0F\x84\xC0\x00\x00\x00"
-#define NETPATCH_NEW "\xE9\xC1\x00\x00\x00\x90"
-#define NETCHUNK_SIG_OFFSET 22
-#define NETCHUNK_SIG "\x8B\x0C\xB8\x8D\x04\xB8"
-#define NETCHUNK_MSK "xxxxxx"
+#include <windows.h>
+#undef GetObject
+#undef CreateEvent
 
 #define BEGIN_MEMEDIT( addr, size ) \
 { \
@@ -217,10 +202,6 @@ extern ICvar *g_pCVarServer;
 } \
 
 #elif defined _LINUX
-
-#define ENGINE_LIB "engine.so"
-#define CLIENT_LIB NULL
-#define SERVER_LIB "server.so"
 
 #include <sys/mman.h>
 #include <unistd.h>
