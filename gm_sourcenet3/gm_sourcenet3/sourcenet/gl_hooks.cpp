@@ -46,10 +46,8 @@ DEFVFUNC_( CNetChan_SendDatagram_T, int, ( CNetChan *netchan, sn3_bf_write *data
 
 int VFUNC CNetChan_SendDatagram_H( CNetChan *netchan, sn3_bf_write *data )
 {
-#ifdef _WIN32
 	if ( !g_bPatchedNetChunk )
 		return CNetChan_SendDatagram_T( netchan, data );
-#endif
 
 	BEGIN_MULTISTATE_HOOK( "PreSendDatagram" );
 		DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
@@ -119,7 +117,16 @@ void VFUNC CNetChan_Shutdown_H( CNetChan *netchan, const char *reason )
 {
 	BEGIN_MULTISTATE_HOOK( "PreNetChannelShutdown" );
 		DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
-		DO_MULTISTATE_HOOK( Lua()->Push( reason ) );
+		
+		// Fuck Linux
+		if ( reason && reason != (const char *)0x02 )
+		{
+			DO_MULTISTATE_HOOK( Lua()->Push( reason ) );
+		}
+		else
+		{
+			DO_MULTISTATE_HOOK( Lua()->PushNil() );
+		}
 		
 		CALL_MULTISTATE_HOOK( 0 );
 	END_MULTISTATE_HOOK();
