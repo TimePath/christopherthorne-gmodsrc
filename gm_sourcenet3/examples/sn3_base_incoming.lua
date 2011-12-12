@@ -9,6 +9,8 @@ include( "sn3_base_netmessages.lua" )
 -- Initialization
 
 HookNetChannel(
+	-- nochan prevents a net channel being passed to the attach/detach functions
+	-- CNetChan::ProcessMessages doesn't use a virtual hook, so we don't need to pass the net channel
 	{ name = "CNetChan::ProcessMessages", nochan = true }
 )
 
