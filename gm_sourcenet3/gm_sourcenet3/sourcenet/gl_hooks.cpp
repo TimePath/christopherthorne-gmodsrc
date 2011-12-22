@@ -46,10 +46,10 @@ DEFVFUNC_( CNetChan_SendDatagram_T, int, ( CNetChan *netchan, sn3_bf_write *data
 
 int VFUNC CNetChan_SendDatagram_H( CNetChan *netchan, sn3_bf_write *data )
 {
-	if ( !g_bPatchedNetChunk )
-		return CNetChan_SendDatagram_T( netchan, data );
-
 	BEGIN_MULTISTATE_HOOK( "PreSendDatagram" );
+		
+	if ( Lua()->IsClient() || g_bPatchedNetChunk )
+	{
 		DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
 
 		if ( !g_pEngineServer->IsDedicatedServer() )
@@ -67,14 +67,21 @@ int VFUNC CNetChan_SendDatagram_H( CNetChan *netchan, sn3_bf_write *data )
 		DO_MULTISTATE_HOOK( PUSH_META( &netchan->voicedata, sn3_bf_write ) );
 
 		CALL_MULTISTATE_HOOK( 0 );
+	}
+	
 	END_MULTISTATE_HOOK();
 
 	int r = CNetChan_SendDatagram_T( netchan, data );
 
 	BEGIN_MULTISTATE_HOOK( "PostSendDatagram" );
+		
+	if ( Lua()->IsClient() || g_bPatchedNetChunk )
+	{
 		DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
 
 		CALL_MULTISTATE_HOOK( 0 );
+	}
+
 	END_MULTISTATE_HOOK();
 
 	return r;
