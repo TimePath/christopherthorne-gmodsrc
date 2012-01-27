@@ -10,7 +10,7 @@ LUA_FUNCTION( cmd_exec )
 
 	Lua()->PushLong( system( Lua()->GetString( 1 ) ) );
 
-	return 0;
+	return 1;
 }
 
 int Open( lua_State *L )
