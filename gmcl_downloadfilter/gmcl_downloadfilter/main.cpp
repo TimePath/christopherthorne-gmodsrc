@@ -64,7 +64,13 @@ int Open( lua_State *L )
 	CByteScanner engineScanner( "engine.dll" );
 
 	// Scan for CL_QueueDownload
-	CL_QueueDownload_T = (CL_QueueDownload_t)engineScanner.FindCodePattern( "\xF7\x05\x54\xCB\xD2\x0D\x00\x10\x00\x00\x74\x16\x8B\x4C\x24\x04", "xx????xxxxx?xxxx" );
+	CL_QueueDownload_T = (CL_QueueDownload_t)engineScanner.FindCodePattern(
+		"\x55" // push ebp
+		"\x8B\xEC" // mov ebp, esp
+		"\xF7\x05\x44\x0C\xC4\x77\x00\x10\x00\x00" // test dword ptr ds:[xxxxxxxx], 1000
+		"\x74\x18" // je short engine.xxxxxxxx
+		"\x8B\x4D\x08", // mov ecx, dword ptr ss:[ebp+8]
+		"xxxxx????xxxxx?xxx" ); // mask
 
 	if ( CL_QueueDownload_T )
 	{
