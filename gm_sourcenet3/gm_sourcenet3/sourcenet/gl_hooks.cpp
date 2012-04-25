@@ -48,7 +48,7 @@ int VFUNC CNetChan_SendDatagram_H( CNetChan *netchan, sn3_bf_write *data )
 {
 	BEGIN_MULTISTATE_HOOK( "PreSendDatagram" );
 		
-	if ( Lua()->IsClient() || g_bPatchedNetChunk )
+	if ( Lua()->IsClient() )
 	{
 		DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
 
@@ -75,7 +75,7 @@ int VFUNC CNetChan_SendDatagram_H( CNetChan *netchan, sn3_bf_write *data )
 
 	BEGIN_MULTISTATE_HOOK( "PostSendDatagram" );
 		
-	if ( Lua()->IsClient() || g_bPatchedNetChunk )
+	if ( Lua()->IsClient() )
 	{
 		DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
 
@@ -425,14 +425,14 @@ MONITOR_HOOK( CNetChan_ProcessMessages );
 
 GLBL_FUNCTION( Attach__CNetChan_ProcessMessages )
 {
+	UsesLua();
+
 	if ( !CNetChan_ProcessMessages_T )
 	{
-		Msg( "[gm_sourcenet3] Hooking to CNetChan::ProcessMessages is disabled as the signature scan failed\n" );
+		Lua()->Error( "[gm_sourcenet3] Hooking to CNetChan::ProcessMessages is disabled as the signature scan failed\n" );
 
 		return 0;
 	}
-
-	UsesLua();
 
 	ICvar *g_pCVar = NULL;
 
