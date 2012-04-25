@@ -34,8 +34,9 @@
 #define CLIENT_LIB "client.dll"
 #define SERVER_LIB "server.dll"
 
-#define CNetChan_ProcessMessages_SIG "\x83\xEC\x34\x53\x55\x89\x4C\x24\x08\x56\xB9"
-#define CNetChan_ProcessMessages_MSK "xx?xxxx??xx"
+
+#define CNetChan_ProcessMessages_SIG "\x55\x8B\xEC\x83\xEC\x2C\x53\x89\x4D\xFC"
+#define CNetChan_ProcessMessages_MSK "xxxxxxxxxx"
 
 #define NETPATCH_LEN 6
 #define NETPATCH_OLD "\x0F\x84\xC0\x00\x00\x00"
@@ -624,7 +625,7 @@ int Open( lua_State *L )
 #endif
 		if ( !CNetChan_ProcessMessages_T )
 		{
-			Msg( "[gm_sourcenet3] Failed to locate CNetChan::ProcessMessages, report this!\n" );
+			Lua()->ErrorNoHalt( "[gm_sourcenet3] Failed to locate CNetChan::ProcessMessages, report this!\n" );
 		}
 	}
 	
@@ -646,9 +647,9 @@ int Open( lua_State *L )
 		}
 		else
 		{
-			Msg( "[gm_sourcenet3] Failed to locate net thread chunk, report this!\n" );
-
 			g_bPatchedNetChunk = false;
+
+			Lua()->Error( "[gm_sourcenet3] Failed to locate net thread chunk, report this!\n" );
 		}
 	}
 
