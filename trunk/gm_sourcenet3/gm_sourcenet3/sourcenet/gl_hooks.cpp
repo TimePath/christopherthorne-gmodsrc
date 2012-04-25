@@ -48,40 +48,33 @@ int VFUNC CNetChan_SendDatagram_H( CNetChan *netchan, sn3_bf_write *data )
 {
 	BEGIN_MULTISTATE_HOOK( "PreSendDatagram" );
 		
-	if ( Lua()->IsClient() )
+	DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
+
+	if ( !g_pEngineServer->IsDedicatedServer() )
 	{
-		DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
-
-		if ( !g_pEngineServer->IsDedicatedServer() )
-		{
-			DO_MULTISTATE_HOOK( PUSH_META( g_pEngineClient->GetNetChannelInfo(), CNetChan ) );
-		}
-		else
-		{
-			DO_MULTISTATE_HOOK( Lua()->PushNil() );
-		}
-
-		DO_MULTISTATE_HOOK( PUSH_META( data, sn3_bf_write ) );
-		DO_MULTISTATE_HOOK( PUSH_META( &netchan->reliabledata, sn3_bf_write ) );
-		DO_MULTISTATE_HOOK( PUSH_META( &netchan->unreliabledata, sn3_bf_write ) );
-		DO_MULTISTATE_HOOK( PUSH_META( &netchan->voicedata, sn3_bf_write ) );
-
-		CALL_MULTISTATE_HOOK( 0 );
+		DO_MULTISTATE_HOOK( PUSH_META( g_pEngineClient->GetNetChannelInfo(), CNetChan ) );
 	}
-	
+	else
+	{
+		DO_MULTISTATE_HOOK( Lua()->PushNil() );
+	}
+
+	DO_MULTISTATE_HOOK( PUSH_META( data, sn3_bf_write ) );
+	DO_MULTISTATE_HOOK( PUSH_META( &netchan->reliabledata, sn3_bf_write ) );
+	DO_MULTISTATE_HOOK( PUSH_META( &netchan->unreliabledata, sn3_bf_write ) );
+	DO_MULTISTATE_HOOK( PUSH_META( &netchan->voicedata, sn3_bf_write ) );
+
+	CALL_MULTISTATE_HOOK( 0 );
 	END_MULTISTATE_HOOK();
 
 	int r = CNetChan_SendDatagram_T( netchan, data );
 
 	BEGIN_MULTISTATE_HOOK( "PostSendDatagram" );
-		
-	if ( Lua()->IsClient() )
-	{
-		DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
+	
+	DO_MULTISTATE_HOOK( PUSH_META( netchan, CNetChan ) );
 
-		CALL_MULTISTATE_HOOK( 0 );
-	}
-
+	CALL_MULTISTATE_HOOK( 0 );
+	
 	END_MULTISTATE_HOOK();
 
 	return r;
