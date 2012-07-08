@@ -6,8 +6,6 @@ SETUP_SIMPLE_DETOUR( CLuaInterface_ErrorFromLua_Detour, CLuaInterface_Hooks::Err
 
 CUtlVector<ILuaInterface *> g_LuaInterfaces;
 
-bool g_bLoaded = false;
-
 void CLuaInterface_Hooks::ErrorFromLua_H( const char *err, ... )
 {
 	ILuaInterface *luaInterface = (ILuaInterface *)this;
