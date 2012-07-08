@@ -6,7 +6,7 @@
 class CSimpleDetour
 {
 public:
-	CSimpleDetour(void **old, void *replacement);
+	CSimpleDetour( void **old, void *replacement );
 
 	void Attach();
 	void Detach();
@@ -17,7 +17,7 @@ private:
 	bool m_bAttached;
 };
 
-#define SETUP_SIMPLE_DETOUR(name, old, replacement) \
-	CSimpleDetour name(&(void * &)old, (void *)(&(void * &)replacement))
+#define SETUP_SIMPLE_DETOUR( name, old, replacement ) \
+	CSimpleDetour name( &(void * &)old, (void *)(&(void * &)replacement) )
 
 #endif //CSIMPLEDETOUR_H
